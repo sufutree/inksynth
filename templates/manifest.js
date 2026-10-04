@@ -12,5 +12,7 @@ InkTemplates.files = [
   "cinematic",
   "synthwave",
   "citypop",
-  "liquid"
+  "liquid",
+  "egypt",
+  "bali"
 ];

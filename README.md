@@ -18,7 +18,7 @@
   - 下方節奏區點一下就能放鼓
 - **疊合總覽**：把所有音效疊在同一張圖上，看清楚整首曲子的結構。
 - **全域設定**：主音、音階、BPM，以及啟動時要不要對齊拍子或小節。
-- **範本**：內建 13 套曲風範本（Lo-fi、Pop、House、和風、Blues、Chiptune、Ambient、Bossa Nova、City Pop、Synthwave 等）。
+- **範本**：內建 15 套曲風範本，每套 40 格全滿（Lo-fi、Pop、House、和風、Blues、Chiptune、Ambient、Bossa Nova、City Pop、Synthwave、埃及阿拉伯、巴里島甘美朗等），任意疊加都在同一個小節線上對齊、和聲不打架。
 - **存檔與音色庫**：會自動存在瀏覽器裡，也可以把音效板匯出成 `.json`，或從其他音效板匯入音色。
 
 ## 快捷鍵（編輯器）
@@ -56,7 +56,19 @@ npx serve .
 │   └── main.js       # 介面、鍵盤、自動儲存、啟動
 ├── templates/        # 範本檔（manifest.js 是範本清單）
 └── tools/            # 產生範本用的開發工具，網頁本身不會載入
+    ├── build-templates.js  # 範本產生器（和聲、聲部進行、旋律、衝突檢查）
+    ├── template-styles.js  # 各範本的設定：和弦進行、鼓型、音色、名稱
+    └── build-bossa.js      # Bossa Nova 範本（手工編排）
 ```
+
+### 重新產生內建範本
+
+```bash
+node tools/build-templates.js          # 全部重新產生
+node tools/build-templates.js lofi pop # 只產生指定的範本
+```
+
+和弦進行寫在 `tools/template-styles.js`。產生器會擋下屬七、小大七、增、減、♭9 這類容易聽起來不協調的和弦（藍調例外），並且模擬所有循環同時播放、回報半音衝突的次數。
 
 ### 新增範本
 
