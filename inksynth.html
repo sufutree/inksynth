@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InkSynth Pads</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <div class="logo">Ink<b>Synth</b></div>
+  <button class="boardName" id="boardName" title="點擊重新命名"></button>
+  <div class="tabs" id="views">
+    <button data-view="board" class="on">⌨ 音效板</button>
+    <button data-view="overview">◎ 疊合總覽</button>
+  </div>
+  <div class="tabs" id="modes">
+    <button data-mode="play" class="on">▶ 演奏</button>
+    <button data-mode="edit">✎ 編輯</button>
+  </div>
+  <div class="glob">
+    <label>主音 <select id="root"></select></label>
+    <label>音階 <select id="scale"></select></label>
+    <label>BPM <input type="number" id="bpm" min="50" max="200"></label>
+    <label>啟動對齊 <select id="quant"><option value="off">立即</option><option value="beat">對拍</option><option value="bar">對小節</option></select></label>
+    <button class="hbtn stop" id="stopAll">■ 全部停止</button>
+    <select id="tpl" class="tplSel"><option value="">🎼 範本…</option></select>
+    <div class="menuWrap">
+      <button class="hbtn" id="fileBtn">☰ 檔案</button>
+      <div class="menu" id="fileMenu" hidden>
+        <button data-act="new">＋ 全新空白音效板</button>
+        <hr>
+        <button data-act="open">📂 開啟音效板檔案…</button>
+        <button data-act="save">💾 儲存音效板（.json）</button>
+        <button data-act="template">🧩 匯出成範本檔（.js）</button>
+        <hr>
+        <button data-act="lib">📚 從檔案加入音色庫…</button>
+        <button data-act="libcur">📚 把目前音效板存進音色庫</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 音效板 -->
+  <section id="boardView">
+    <div id="board"></div>
+    <div id="boardHint"></div>
+  </section>
+
+  <!-- 疊合總覽 -->
+  <section id="ovView" hidden>
+    <div class="ovStage" id="ovStage"><canvas id="ovCv"></canvas><div class="ovCount" id="ovCount"></div></div>
+    <aside class="ovSide">
+      <h3>時間軸</h3>
+      <div class="seg" id="ovAlign">
+        <button data-v="stretch">拉伸對齊<small>每格都撐滿</small></button>
+        <button data-v="real">實際長度<small>短的重複鋪滿</small></button>
+      </div>
+      <h3>沒在播放的音效</h3>
+      <div class="seg" id="ovOthers">
+        <button data-v="dim">淡化</button>
+        <button data-v="show">照常</button>
+        <button data-v="hide">隱藏</button>
+      </div>
+      <h3>圖層 <span class="hlink"><a id="ovAll">全選</a>・<a id="ovNone">全不選</a></span></h3>
+      <div id="ovLegend"></div>
+      <div class="note">在這個畫面一樣可以用鍵盤彈奏，播放中的音效會亮起來疊在最上層。點圖層上的按鍵也能播放。</div>
+    </aside>
+  </section>
+
+  <!-- 編輯器 -->
+  <section id="editor" hidden>
+    <div class="ebar">
+      <button class="hbtn" id="eDone">← 完成</button>
+      <span class="eNum" id="eNum"></span>
+      <input type="text" id="eName" maxlength="16" placeholder="音效名稱">
+      <button class="hbtn" id="eKey">按鍵 Q</button>
+      <div class="seg" id="eMode" style="width:160px">
+        <button data-v="oneshot">→ 單次</button><button data-v="loop">↻ 循環</button>
+      </div>
+      <label class="lab">長度 <select id="eBeats">
+        <option value="1">1 拍</option><option value="2">2 拍</option><option value="4">1 小節</option>
+        <option value="8">2 小節</option><option value="16">4 小節</option><option value="32">8 小節</option></select></label>
+      <label class="lab">音量 <input type="range" id="eVol" min="0" max="1.2" step="0.05"></label>
+      <button class="hbtn" id="ePlay">▶ 試聽整格</button>
+      <button class="hbtn" id="eImport">📥 匯入音色</button>
+      <button class="hbtn" id="eSpecialBtn" title="這格不跟隨全域設定的特例選項">⚙ 特例</button>
+    </div>
+    <div class="ebar ebar2" id="eSpecial" hidden>
+      <span class="lab">啟動對齊</span>
+      <div class="seg" id="eAlign"></div>
+      <span class="lab">調性</span>
+      <div class="seg" id="eKeyMode"><button data-v="follow">跟隨主調</button><button data-v="own">♮ 獨立調性</button></div>
+      <select id="eRoot" title="這格自己的主音"></select><select id="eScale" title="這格自己的音階"></select>
+      <span class="enote" id="eSpecialNote"></span>
+    </div>
+    <div class="ebody">
+      <aside id="eside">
+        <div class="tabs2">
+          <button data-tab="brush" class="on">筆刷與音色</button>
+          <button data-tab="detail">音色細節</button>
+        </div>
+        <div id="selBar" hidden>
+          <div id="selInfo"></div>
+          <div class="selBtns"><button id="selPlay">▷ 試聽</button><button id="selDel">刪除</button><button id="selNone">取消選取</button></div>
+        </div>
+
+        <div data-pane="brush">
+          <h3>工具</h3>
+          <div class="seg tools" id="tools"></div>
+          <h3>對齊格線</h3>
+          <div class="seg" id="grids"></div>
+          <div class="synOnly">
+            <h3>音色 = 顏色</h3>
+            <div class="tones" id="tones"></div>
+            <div class="toneDesc" id="toneDesc"></div>
+          </div>
+          <label class="slider synOnly">粗細 → Filter Cutoff <span id="vSize"></span><input type="range" id="size" min="3" max="40" step="1"></label>
+          <label class="slider">濃度 → Velocity <span id="vAlpha"></span><input type="range" id="alpha" min="0.15" max="1" step="0.05"></label>
+          <div class="synOnly">
+            <h3>筆觸力度 → 音量</h3>
+            <div class="seg" id="dyns"></div>
+            <h3>筆鋒 → 包絡</h3>
+            <div class="seg" id="envs"></div>
+            <h3>紋理 → 效果器</h3>
+            <div class="seg" id="texs"></div>
+            <h3>和弦形狀</h3>
+            <div class="seg" id="shapes"></div>
+          </div>
+        </div>
+
+        <div data-pane="detail" hidden>
+          <h3 id="detailTitle"></h3>
+          <div id="detailBox"></div>
+          <button class="hbtn wide" id="resetDetail">恢復預設值</button>
+          <div class="note">雙擊滑桿可單獨恢復預設。<br>先用「⬚ 選取」點一個物件，就能只調整那一筆。</div>
+        </div>
+
+        <div class="btns">
+          <button id="undo">↶ 復原</button>
+          <button id="clearPad">清空這格</button>
+        </div>
+        <div class="note">
+          <kbd>Space</kbd> 試聽／停止・<kbd>Ctrl+Z</kbd> 復原・<kbd>Delete</kbd> 刪除選取・<kbd>Esc</kbd> 返回<br>
+          下方節奏區用任何畫筆點一下就放鼓、再點一下拿掉，可以按住橫拖連續填。中間的分隔線能上下拖曳。<br>
+          試聽時會循環播放，邊畫邊聽，改動在下一圈生效。編輯時其他格的按鍵一樣可以彈。
+        </div>
+      </aside>
+      <div class="stage" id="stage">
+        <div class="stageRow">
+          <canvas id="gut"></canvas>
+          <div class="cvWrap" id="cvWrap"><canvas id="cv"></canvas><div id="split" title="拖曳調整節奏區的高度（雙擊恢復）"></div></div>
+        </div>
+        <div id="hint"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<!-- 匯入音色 -->
+<div class="modal" id="impModal" hidden>
+  <div class="mbox">
+    <div class="mhead"><b>匯入音色到 <span id="impTarget"></span></b><button class="hbtn" id="impClose">✕ 關閉</button></div>
+    <div class="mbar">
+      <label>來源 <select id="impSrc"></select></label>
+      <button class="hbtn" id="impAddFile">📂 從檔案加入音色庫…</button>
+      <button class="hbtn stop" id="impDelLib" hidden>移除這個音色庫</button>
+    </div>
+    <div class="mnote"><span id="impNote"></span>
+      <label class="impKeep" id="impKeepWrap"><input type="checkbox" id="impKeep"> 保留來源的調性（匯入後設為這格的「獨立調性」）</label></div>
+    <div class="impGrid" id="impGrid"></div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/board.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/overview.js"></script>
+<script src="js/library.js"></script>
+<script src="templates/manifest.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

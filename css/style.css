@@ -1,0 +1,193 @@
+:root{
+  --bg:#0c0d12; --panel:#14161e; --panel2:#1b1e29; --line:#272a37; --text:#ebe8df; --muted:#8b8e9c;
+  --accent:#7cf0d0; --square:#ffd23f;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;height:100%;}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+select,input[type=number],input[type=text]{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+input[type=range]{accent-color:var(--accent)}
+kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:11.5px;font-family:inherit}
+a{color:var(--accent);cursor:pointer}
+
+/* ---------- Header ---------- */
+header{display:flex;align-items:center;gap:8px 10px;padding:9px 16px;min-height:58px;border-bottom:1px solid var(--line);flex-wrap:wrap;flex:none;position:relative;z-index:6;background:var(--bg)}
+.logo{font-weight:800;font-size:21px;letter-spacing:.3px;margin-right:4px}
+.logo b{color:var(--accent);font-weight:800}
+.tabs{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.tabs button{border:0;background:none;padding:7px 13px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13.5px}
+.tabs button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+#modes button.on[data-mode=edit]{color:var(--square)}
+body.ov #modes{opacity:.45}
+.glob{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.tplSel{border-color:#7cf0d055 !important;color:var(--accent) !important;max-width:170px}
+.glob label{display:flex;align-items:center;gap:5px}
+.glob input[type=number]{width:62px}
+.hbtn{border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:13px}
+.hbtn:hover{border-color:#3d4256}
+.hbtn.stop{border-color:#ff6b7a55;color:#ff9aa5}
+.hbtn.wide{width:100%;margin-top:12px}
+main{flex:1;min-height:0;position:relative}
+
+/* ---------- 音效板（40 格，像鍵盤一樣錯開） ---------- */
+#boardView{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#board{display:grid;grid-template-columns:repeat(43,1fr);row-gap:10px;
+  width:100%;max-width:var(--bw, 100%)}
+.pad{position:relative;aspect-ratio:4/3;margin:0 4px;border-radius:12px;background:#12141c;border:1px solid var(--line);
+  overflow:hidden;cursor:pointer;user-select:none;touch-action:none;transition:transform .06s, box-shadow .15s, border-color .15s;--c:#7cf0d0}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pad .key{position:absolute;left:6px;top:6px;min-width:21px;height:21px;padding:0 5px;border-radius:6px;background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.14);border-bottom-width:2px;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.pad .mode{position:absolute;right:6px;top:6px;font-size:11px;color:var(--muted);background:rgba(0,0,0,.45);padding:1px 6px;border-radius:6px}
+.pad .name{position:absolute;left:0;bottom:0;right:0;padding:10px 7px 4px;background:linear-gradient(transparent,rgba(8,9,13,.75));font-size:11.5px;font-weight:600;text-shadow:0 1px 3px #000;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pad .empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#4b4f60;font-size:20px}
+.pad.isEmpty{border-style:dashed;background:#0f1016}
+.pad.isEmpty .empty{display:flex}
+.pad:hover{border-color:#3d4256}
+.pad.playing{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 0 24px -4px var(--c)}
+.pad.armed{border-color:var(--c);animation:arm .3s infinite alternate}
+@keyframes arm{to{border-color:transparent}}
+.pad.hit{transform:scale(.95)}
+body.edit .pad:hover::after{content:"✎";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(12,13,18,.55);color:var(--square);font-weight:700;font-size:22px}
+#boardHint{margin-top:16px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.8}
+#boardHint b{color:var(--text)}
+
+/* ---------- 疊合總覽 ---------- */
+#ovView{height:100%;display:flex}
+.ovStage{flex:1;position:relative;margin:12px;border-radius:14px;overflow:hidden;border:1px solid var(--line);min-width:0}
+#ovCv{display:block;width:100%;height:100%}
+.ovCount{position:absolute;top:10px;right:14px;font-size:12px;color:var(--muted);background:rgba(0,0,0,.5);padding:3px 9px;border-radius:7px;pointer-events:none}
+.ovSide{width:280px;flex:none;overflow-y:auto;padding:12px 14px 20px;background:var(--panel);border-left:1px solid var(--line)}
+.hlink{float:right;font-size:11.5px;letter-spacing:0;text-transform:none}
+#ovLegend{display:flex;flex-direction:column;gap:3px}
+.lg{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:8px;border:1px solid transparent;font-size:13px}
+.lg:hover{background:var(--panel2)}
+.lg input{margin:0;accent-color:var(--c)}
+.lg kbd{cursor:pointer;min-width:24px;text-align:center}
+.lg kbd:hover{border-color:var(--c)}
+.lg i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.lg .ln{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg .lm{color:var(--muted);font-size:11px}
+.lg.playing{border-color:var(--c);background:color-mix(in srgb, var(--c) 12%, transparent)}
+.lg.armed{border-color:var(--c);border-style:dashed}
+.lgEmpty{font-size:12.5px;color:var(--muted)}
+
+/* ---------- 編輯器 ---------- */
+#editor{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:3}
+.ebar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--panel)}
+.ebar #eName{width:150px;font-weight:600}
+.eNum{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.ebar .lab{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.ebar input[type=range]{width:90px}
+#eDone{background:var(--accent);color:#06221b;border:0;font-weight:700}
+#eKey.wait{border-color:var(--square);color:var(--square);animation:arm .4s infinite alternate}
+#ePlay.on{border-color:var(--accent);color:var(--accent)}
+.ebody{flex:1;display:flex;min-height:0}
+aside h3{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:15px 0 7px}
+#eside{width:300px;flex:none;overflow-y:auto;padding:12px 14px 20px;background:var(--panel);border-right:1px solid var(--line)}
+#eside.isDrop .synOnly{display:none}
+.tabs2{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);padding:3px;border-radius:10px;border:1px solid var(--line)}
+.tabs2 button{border:0;background:none;border-radius:7px;padding:7px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px}
+.tabs2 button.on{background:var(--panel2);color:var(--text)}
+#selBar{margin-top:10px;padding:9px 10px;border-radius:10px;border:1px dashed #ffffff55;background:#ffffff08;font-size:12.5px}
+.selBtns{display:flex;gap:5px;margin-top:7px}
+.selBtns button{flex:1;border:1px solid var(--line);background:var(--panel2);border-radius:7px;padding:5px;cursor:pointer;font-size:12px}
+.seg{display:grid;gap:4px;grid-auto-flow:column;grid-auto-columns:1fr}
+.seg button{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:6px 3px;cursor:pointer;font-size:13px;color:var(--muted);line-height:1.25}
+.seg button small{display:block;font-size:10px;opacity:.75;white-space:nowrap}
+.seg button.on{color:var(--text);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg button:hover{border-color:#3d4256}
+.tones{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.tones button{border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:6px 2px 5px;cursor:pointer;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;line-height:1.15}
+.tones button i{width:22px;height:8px;border-radius:5px;background:var(--tc);box-shadow:0 0 10px -2px var(--tc)}
+.tones button b{color:var(--tc);font-size:12px}
+.tones button.on{color:var(--text);box-shadow:inset 0 0 0 2px var(--tc);border-color:transparent}
+.toneDesc{font-size:12px;color:var(--muted);margin-top:6px;min-height:1.2em}
+.slider{display:block;margin:12px 0 4px;font-size:13px}
+.slider span{float:right;color:var(--accent);font-variant-numeric:tabular-nums;font-size:12px}
+.slider input{width:100%;margin-top:6px}
+#detailBox h4{font-size:11px;color:var(--accent);margin:14px 0 4px;font-weight:600;letter-spacing:.05em}
+.dl{display:grid;grid-template-columns:1fr auto;align-items:center;font-size:12.5px;margin:4px 0}
+.dl .dv{color:var(--accent);font-size:11.5px;font-variant-numeric:tabular-nums}
+.dl input{grid-column:1 / -1;width:100%;margin:2px 0 0}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:16px}
+.btns button{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 4px;cursor:pointer;font-size:13px}
+.note{font-size:12px;color:var(--muted);line-height:1.65;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+.stage{flex:1;position:relative;margin:12px;border-radius:14px;overflow:hidden;border:1px solid var(--line);min-width:0;display:flex;flex-direction:column;background:#0e1017}
+.stageRow{flex:1;display:flex;min-height:0}
+#gut{width:52px;flex:none;display:block;height:100%;border-right:1px solid var(--line);background:#0b0c11}
+.cvWrap{flex:1;position:relative;min-width:0}
+#cv{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#split{position:absolute;left:0;right:0;height:12px;margin-top:-6px;cursor:row-resize;touch-action:none;z-index:2}
+#split::after{content:"";position:absolute;left:50%;top:3px;width:46px;height:6px;margin-left:-23px;border-radius:4px;
+  background:#2c3040;border:1px solid #3d4256;transition:background .15s}
+#split:hover::after,#split.on::after{background:var(--accent)}
+#hint{flex:none;padding:7px 12px;border-top:1px solid var(--line);background:var(--panel);pointer-events:none;font-size:12px;color:#b9b6ad;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg.tools{grid-auto-flow:row;grid-template-columns:repeat(3,1fr)}
+.ebar2{padding:8px 14px;background:#171a24;font-size:12.5px}
+.ebar2 .seg button{padding:5px 9px}
+.ebar2 select:disabled{opacity:.35}
+.enote{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+#eSpecialBtn.on{border-color:var(--square);color:var(--square)}
+.impKeep{display:flex;gap:6px;align-items:center;margin-top:6px;color:var(--text);cursor:pointer;width:max-content}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#232634;border:1px solid var(--line);z-index:9;
+  padding:8px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
+
+@media (max-width:900px){
+  header{height:auto;padding:10px 12px}
+  .glob{margin-left:0;flex-wrap:wrap}
+  main{flex:none;min-height:70vh}
+  #board{width:100%;row-gap:6px}
+  .pad{margin:0 2px;border-radius:8px}
+  .pad .name,.pad .mode{display:none}
+  #ovView{flex-direction:column}
+  .ovStage{height:60vh;flex:none}
+  .ovSide{width:auto;border-left:0}
+  #editor{position:fixed;inset:0;z-index:5;overflow:auto}
+  .ebody{flex-direction:column}
+  #eside{width:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .stage{height:62vh;flex:none;margin:8px}
+}
+
+/* ---------- 音效板名稱、檔案選單 ---------- */
+.boardName{border:1px dashed transparent;background:none;color:var(--muted);font-size:13px;padding:4px 8px;border-radius:7px;cursor:pointer;
+  max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boardName:hover{border-color:var(--line);color:var(--text)}
+.menuWrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:5px;
+  min-width:230px;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:20;display:flex;flex-direction:column}
+.menu button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13.5px;color:var(--text)}
+.menu button:hover{background:var(--panel2)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+
+/* ---------- 播完這圈才停 ---------- */
+.pad.stopping{border-style:dashed;box-shadow:0 0 0 1px var(--c);animation:stopBlink .5s infinite alternate}
+@keyframes stopBlink{to{opacity:.6}}
+.lg.stopping{border-style:dashed}
+
+/* ---------- 匯入音色對話框 ---------- */
+.modal{position:fixed;inset:0;background:rgba(5,6,9,.72);backdrop-filter:blur(3px);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:min(980px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);font-size:15px}
+.mbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px 4px;font-size:13px;color:var(--muted)}
+.mbar label{display:flex;gap:6px;align-items:center}
+.mbar select{min-width:260px}
+.mnote{padding:4px 16px 10px;font-size:12px;color:var(--muted)}
+.impGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));grid-auto-rows:max-content;align-content:start;gap:10px;padding:4px 16px 18px;overflow-y:auto;flex:1;min-height:0}
+.impCard{border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden;--c:#7cf0d0}
+.impCard canvas{display:block;width:100%;aspect-ratio:5/3;height:auto}
+.impCard.playing{border-color:var(--c);box-shadow:0 0 18px -6px var(--c)}
+.impMeta{display:flex;gap:7px;align-items:center;padding:8px 10px 0;font-size:13px}
+.impMeta b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.impInfo{padding:3px 10px 0;font-size:11.5px;color:var(--muted)}
+.impBtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 10px 10px}
+.impBtns button{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px;cursor:pointer;font-size:12.5px}
+.impBtns button.pri{background:var(--accent);color:#06221b;border-color:transparent;font-weight:700}
+.impEmpty{color:var(--muted);font-size:13px;padding:20px 0}
