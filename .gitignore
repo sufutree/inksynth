@@ -2,3 +2,6 @@
 node_modules
 .DS_Store
 Thumbs.db
+# 錄下來的影片不要上傳
+*.mp4
+*.webm

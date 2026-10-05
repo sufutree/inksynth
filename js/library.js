@@ -153,7 +153,7 @@ function importPad(src){
   const p = EP(); pushHistory();
   Object.assign(p, normalizePad({name:src.name, mode:src.mode, beats:src.beats, vol:src.vol ?? 0.8, align:src.align, ownKey:clone(src.ownKey || null),
     objects:clone(src.objects).map(normalizeObj)}));
-  S.sel = null; closeImport(); stopPad(S.editing, 0.02); resetScaleCache();
+  setSel([]); closeImport(); stopPad(S.editing, 0.02); resetScaleCache();
   bgDirty = true; changed(); syncEditorBar(); syncTools();
   toast(`已匯入「${src.name || '未命名'}」，可以按 Ctrl+Z 復原畫面內容`);
 }

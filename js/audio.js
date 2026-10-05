@@ -2,7 +2,14 @@
 /* ============================================================
    audio.js — 合成引擎：多種音色、6 種鼓、ADSR、濾波、效果、播放管理
    ============================================================ */
-let ctx = null, master, revIn, dlyIn, delayNode, noiseBuf, crackleBuf, SAT, PW25, ORGAN;
+let ctx = null, master, revIn, dlyIn, delayNode, noiseBuf, crackleBuf, SAT, PW25, ORGAN, LITE = false;
+let OUT = null;   // 最後的輸出（壓縮器之後）
+/* 混音：總音量（存在瀏覽器裡）、靜音、獨奏（只在這次演奏有效，不存檔） */
+const MIX_STORE = 'inksynth-mix-v1', MIX = {master:1, mute:new Set(), solo:new Set()};
+try{ const m = JSON.parse(localStorage.getItem(MIX_STORE)); if(m && m.master != null) MIX.master = clamp(+m.master, 0, 1.5); }catch(e){}
+const mixSilenced = i => MIX.mute.has(i) || (MIX.solo.size > 0 && !MIX.solo.has(i));
+/** 一格實際的音量：格子的音量 × 靜音／獨奏 */
+const padGain = i => typeof i === 'number' ? (S.pads[i] ? S.pads[i].vol : 0) * (mixSilenced(i) ? 0 : 1) : null;
 const LOOSE = {srcs:[], out:null};   // 試聽用的零散音源
 
 function curve(k){ const n = 2048, c = new Float32Array(n);
@@ -13,8 +20,8 @@ const driveCurve = d => { const k = Math.round(d * 20); return _drive[k] || (_dr
 function initAudio(){
   if(ctx){ if(ctx.state !== 'running') ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(ctx.destination);
-  master = ctx.createGain(); master.gain.value = 0.75; master.connect(comp);
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(ctx.destination); OUT = comp;
+  master = ctx.createGain(); master.gain.value = 0.75 * MIX.master; master.connect(comp);
 
   // 殘響：用衰減噪音產生 impulse response
   const conv = ctx.createConvolver(), len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -109,7 +116,8 @@ function buildTone(tone, o, f0, ts, end, dest, v){
     case 'sawtooth': osc('sawtooth', 1, -u / 2); osc('sawtooth', 1, u / 2); break;
     case 'square': osc('square', 1, -u / 4, 0.8); osc('square', 1, u / 4, 0.8); break;
     case 'pulse': osc(PW25, 1, -u / 4); osc(PW25, 1, u / 4); break;
-    case 'supersaw': for(let i = 0; i < 7; i++) osc('sawtooth', 1, (i - 3) / 3 * u * 1.6, 0.5); break;
+    case 'supersaw': if(LITE) for(let i = 0; i < 3; i++) osc('sawtooth', 1, (i - 1) * u * 1.6, 0.76);   // 輕量版：3 層，音量補回來
+                     else for(let i = 0; i < 7; i++) osc('sawtooth', 1, (i - 3) / 3 * u * 1.6, 0.5); break;
     case 'organ': osc(ORGAN, 1, -u / 6); osc(ORGAN, 1, u / 6); break;
     case 'bell': {
       const c = osc('sine', 1), m = ctx.createOscillator(), mg = ctx.createGain();
@@ -174,14 +182,16 @@ function scheduleLine(o, t0, dur, v){
   addVibrato(o, T, ts, ch.end, te - ts, v);
 }
 function scheduleChord(o, ts, len, v){
-  const notes = chordNotes(o); notes.unshift(quant(o.y) - 12);
+  // 每個音都寫出來的和弦：聽到的就是畫面上的音；舊資料（只有形狀）照舊在下面多墊一個低八度的根音
+  const notes = chordNotes(o); if(!o.notes) notes.unshift(quant(o.y) - 12);
   const te = ts + len, oct = o.oct * 12;
   const ch = makeChain(o, ts, te, v, LVL[o.tone] * 1.1 * (0.15 + o.alpha * 0.85) / Math.sqrt(notes.length), cutoffOf(o.size));
+  const D = [];
   for(const m of notes){
     const T = buildTone(o.tone, o, mtof(m + oct), ts, ch.end + 0.05, ch.input, v);
-    T.D.forEach(d => d.value += (Math.random() - 0.5) * 8);
-    addVibrato(o, T, ts, ch.end, len, v);
+    T.D.forEach(d => { d.value += (Math.random() - 0.5) * 8; D.push(d); });
   }
+  addVibrato(o, {D}, ts, ch.end, len, v);   // 整個和弦共用一個顫音 LFO
 }
 function playDrum(o, t, v){
   const vv = 0.35 + o.alpha * 0.65, tr = Math.pow(2, (o.tune || 0) / 12), dk = o.dec || 1;
@@ -232,17 +242,25 @@ function makeOut(vol, parent){
 const disconnectOut = o => { for(const k in o) o[k].disconnect(); };
 /** align：音效格自己的啟動對齊，'global' 或沒有就跟隨上方的設定 */
 function launchTime(immediate, align){
-  const now = ctx.currentTime + 0.02, q = !align || align === 'global' ? S.quant : align;
+  const now = ctx.currentTime + 0.05, q = !align || align === 'global' ? S.quant : align;
   if(immediate || q === 'off') return now;
   const grid = 60 / S.bpm * (q === 'bar' ? 4 : 1);
   return Math.ceil(now / grid - 1e-6) * grid;
 }
+/* 邊播邊排：每一圈先把物件依開始時間排好隊，之後每次只建立「接下來 LOOKAHEAD 秒內」要響的音。
+   一次把整圈（最長 8 小節、上百個音）的節點全部建好，同時開很多格時會卡住主執行緒、讓聲音斷掉。 */
+const LOOKAHEAD = 0.6;   // 提前排程的秒數：主執行緒偶爾被重繪或垃圾回收拖住時，也來得及
+const objStart = o => o.type === 'line' ? o.pts[0].x : o.x;
 function schedulePass(p, v, t0){
   const now = ctx.currentTime;
   v.passes = v.passes.filter(ps => { if(ps.t0 + v.dur + 4 < now){ disconnectOut(ps.out); return false; } return true; });
-  const ps = {t0, srcs:[], out:makeOut(1, v.out)};
-  v.passes.push(ps);
-  withKey(p, () => { for(const o of p.objects) scheduleObj(o, t0, v.dur, ps); });
+  const queue = p.objects.map(o => ({o, t:t0 + objStart(o) * v.dur})).sort((a, b) => a.t - b.t);
+  const ps = {t0, srcs:[], out:makeOut(1, v.out), queue, qi:0};
+  v.passes.push(ps); pumpPass(v, ps, now + LOOKAHEAD);
+}
+function pumpPass(v, ps, until){
+  if(ps.qi >= ps.queue.length) return;
+  withKey(v.pad, () => { while(ps.qi < ps.queue.length && ps.queue[ps.qi].t < until){ scheduleObj(ps.queue[ps.qi].o, ps.t0, v.dur, ps); ps.qi++; } });
 }
 function silencePass(ps, fade){
   const now = ctx.currentTime;
@@ -255,7 +273,7 @@ function startVoice(id, p, opt = {}){
   if(!p || !p.objects.length) return false;
   initAudio(); stopPad(id, 0.02);
   const t0 = launchTime(opt.immediate, p.align), dur = padDur(p), loop = opt.loop ?? p.mode !== 'oneshot';
-  const v = {pad:p, out:makeOut(p.vol), passes:[], t0, upto:t0, dur, loop, endAt:loop ? Infinity : t0 + dur, stopping:false, preview:!!opt.preview};
+  const v = {pad:p, out:makeOut(padGain(id) ?? p.vol), passes:[], t0, upto:t0, dur, loop, endAt:loop ? Infinity : t0 + dur, stopping:false, preview:!!opt.preview};
   voices.set(id, v); schedulePass(p, v, t0); onVoiceChange(id);
   return true;
 }
@@ -286,16 +304,23 @@ function resumeLoop(id){
   Object.assign(v, {loop:true, stopping:false, endAt:Infinity}); onVoiceChange(id);
   return true;
 }
-function setPadVolume(i, vol){ const v = voices.get(i); if(v) for(const k in v.out) v.out[k].gain.setTargetAtTime(vol, ctx.currentTime, 0.02); }
+/** 播放中改音量立刻生效（vol 省略＝用格子的音量，並套用靜音／獨奏） */
+function setPadVolume(i, vol){ const v = voices.get(i); if(!v) return; const g = typeof i === 'number' ? padGain(i) : vol;
+  for(const k in v.out) v.out[k].gain.setTargetAtTime(g, ctx.currentTime, 0.02); }
+function setMasterVolume(x){ MIX.master = clamp(x, 0, 1.5); if(master) master.gain.setTargetAtTime(0.75 * MIX.master, ctx.currentTime, 0.02);
+  try{ localStorage.setItem(MIX_STORE, JSON.stringify({master:MIX.master})); }catch(e){} }
 function stopAll(){ for(const id of [...voices.keys()]) stopPad(id, 0.08); }
+let tick = 0;
 setInterval(() => {
   if(!ctx) return; const now = ctx.currentTime;
+  LITE = voices.size >= 6;   // 同時播很多格時降低音色的層數，減輕負擔
   for(const [id, v] of voices){
     if(v.loop){ if(now > v.upto + v.dur - 0.4){ v.upto += v.dur; schedulePass(v.pad, v, v.upto); } }
-    else if(now > v.endAt + 3){ for(const ps of v.passes) disconnectOut(ps.out); disconnectOut(v.out); voices.delete(id); onVoiceChange(id); }
+    else if(now > v.endAt + 3){ for(const ps of v.passes) disconnectOut(ps.out); disconnectOut(v.out); voices.delete(id); onVoiceChange(id); continue; }
+    for(const ps of v.passes){ pumpPass(v, ps, now + LOOKAHEAD); if(tick % 40 === 0) ps.srcs = ps.srcs.filter(x => x.end > now); }
   }
-  LOOSE.srcs = LOOSE.srcs.filter(x => x.end > now);
-}, 50);
+  if(tick++ % 40 === 0) LOOSE.srcs = LOOSE.srcs.filter(x => x.end > now);
+}, 25);
 /** 回傳 {state:'armed'|'playing'|null, prog, el, stopping} */
 function padState(id){
   const v = voices.get(id); if(!v || !ctx) return {state:null};

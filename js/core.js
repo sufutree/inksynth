@@ -64,7 +64,10 @@ const ENV_PRESETS = {
   swell: {zh:'漸強', sub:'緩慢浮現', a:1.2,   d:0.5,  s:1,    r:1.5},
 };
 const DYN_MODES = {fixed:{zh:'固定', sub:'不變'}, speed:{zh:'速度', sub:'慢＝重'}, pressure:{zh:'筆壓', sub:'繪圖筆'}};
-const SHAPES = {tri:{zh:'△', sub:'三和弦'}, sq:{zh:'□', sub:'七和弦'}, circle:{zh:'○', sub:'強力和弦'}};
+/* 和弦形狀只代表音的數量：△ 3 個、□ 4 個、○ 5 個以上；每個音的高度可以自己調 */
+const SHAPES = {tri:{zh:'△', sub:'3 個音'}, sq:{zh:'□', sub:'4 個音'}, circle:{zh:'○', sub:'5 個以上'}};
+const SHAPE_N = {tri:3, sq:4, circle:5};
+const shapeOfCount = n => n <= 3 ? 'tri' : n === 4 ? 'sq' : 'circle';
 const PAD_MODES = {oneshot:'→ 單次', loop:'↻ 循環'};
 const ALIGNS = {global:'跟隨全域', off:'立即', beat:'對拍', bar:'對小節'};
 const GRIDS = {1:{zh:'1/4', sub:'一拍'}, 2:{zh:'1/8', sub:'半拍'}, 4:{zh:'1/16', sub:'四分之一拍'}, 3:{zh:'三連音', sub:'1/8T'}};
@@ -132,6 +135,7 @@ function normalizeObj(o){
   if(o.type !== 'drop'){ o.tone = TONES[o.tone] ? o.tone : 'sine'; o.texture = TEXTURES[o.texture] ? o.texture : 'smooth'; }
   if(o.type === 'line') o.pts.forEach(p => { if(p.w == null) p.w = 1; });
   if(o.type === 'drop' && !DRUMS[o.lane]) o.lane = 'kick';
+  if(o.type === 'chord' && o.notes){ o.notes = o.notes.filter(Number.isFinite); if(o.notes.length) syncChord(o); else delete o.notes; }
   for(const k in PDEF) if(o[k] == null) o[k] = PDEF[k];
   if(o.alpha == null) o.alpha = 0.8;
   if(o.size == null) o.size = 12;
@@ -160,7 +164,9 @@ function quant(y){
 }
 const midiToY = m => MEL_TOP + (MIDI_HI - m) / (MIDI_HI - MIDI_LO) * (MEL_BOT - MEL_TOP);
 const noteName = m => NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+/** 和弦實際的音（由低到高）：有 notes 就用每個音自己的高度，舊資料才用形狀推算 */
 function chordNotes(o){
+  if(o.notes && o.notes.length) return o.notes.map(quant).sort((a, b) => a - b);
   const r = quant(o.y);
   if(o.shape === 'circle') return [r, r + 7, r + 12];
   if(curScale() === 'chromatic') return o.shape === 'sq' ? [r, r + 3, r + 7, r + 10] : [r, r + 3, r + 7];
@@ -174,6 +180,22 @@ function chordNotes(o){
   const third = pick(3, 4), fifth = pick(7, 6, 8) ?? 7, n = third ? [r, r + third, r + fifth] : [r, r + fifth, r + 12];
   if(o.shape === 'sq') n.push(r + (pick(10, 11, 9) ?? 10));
   return n;
+}
+/** 從根音往上疊 n 個音（7 聲音階疊三度；五聲、都節等挑音階裡有的三、五、七、九度），回傳每個音的 y */
+function stackChord(y, n){
+  const r = quant(y); let ms;
+  if(curScale() === 'chromatic') ms = [0, 3, 7, 10, 14, 17].map(x => r + x);
+  else if(SCALES[curScale()].iv.length === 7){ const E = extNotes(), i = E.indexOf(r); ms = [0, 2, 4, 6, 8, 10].map(k => E[i + k]); }
+  else { const pick = (...c) => c.find(x => inScale(r + x));
+    ms = [0, pick(3, 4, 2, 5), pick(7, 6, 8), pick(10, 11, 9), pick(14, 13, 15), pick(17, 16, 19)].filter(x => x != null).map(x => r + x);
+    while(ms.length < n) ms.push(ms[Math.max(0, ms.length - 3)] + 12); }
+  return ms.slice(0, n).map(m => +midiToY(Math.min(m, MIDI_HI)).toFixed(5));
+}
+/** 整理和弦：音由低到高排好、根音 y 跟著最低音、形狀依音數決定 */
+function syncChord(o){
+  o.notes.sort((a, b) => b - a);   // y 越大音越低
+  o.y = o.notes[0]; o.shape = shapeOfCount(o.notes.length);
+  return o;
 }
 function lineYAt(o, xn){
   const P = o.pts; if(xn < P[0].x || xn > P[P.length - 1].x) return null;

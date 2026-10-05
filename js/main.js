@@ -2,7 +2,7 @@
 /* ============================================================
    main.js — 全域介面、鍵盤、自動儲存、啟動
    ============================================================ */
-function onVoiceChange(id){ if(id === S.editing) syncEditorBar(); if(id === 'imp') markImport(); }
+function onVoiceChange(id){ if(id === S.editing) syncEditorBar(); if(id === 'imp') markImport(); mixerSync(); }
 
 /* ---------- 畫面與模式 ---------- */
 function setView(v){
@@ -47,10 +47,13 @@ addEventListener('keydown', e => {
     else bindKey(e.code);
     return;
   }
-  if(tag === 'SELECT' || (tag === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')){ if(e.code === 'Escape') e.target.blur(); return; }
+  const undoKey = (e.ctrlKey || e.metaKey) && !e.altKey && (e.code === 'KeyZ' || e.code === 'KeyY');
+  // 改完下拉選單（例如「長度」）後焦點會停在選單上，復原／重做照樣要能用；文字輸入框保留瀏覽器自己的文字復原
+  if(tag === 'SELECT' && undoKey && S.editing !== null) e.target.blur();
+  else if(tag === 'SELECT' || (tag === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')){ if(e.code === 'Escape') e.target.blur(); return; }
   if(e.code === 'Escape'){
     if(!$('#impModal').hidden) closeImport();
-    else if(S.editing !== null && S.sel) select(null);
+    else if(S.editing !== null && S.sel) select(null);   // 取消所有選取
     else if(S.editing !== null) closeEditor();
     else stopAll();
     return;
@@ -58,9 +61,11 @@ addEventListener('keydown', e => {
   if(!$('#impModal').hidden) return;
   if(S.editing !== null){
     if(e.code === 'Space'){ e.preventDefault(); togglePreview(); return; }
-    if((e.ctrlKey || e.metaKey) && e.code === 'KeyZ'){ e.preventDefault(); undo(); return; }
+    if(undoKey){ e.preventDefault(); if(e.code === 'KeyY' || e.shiftKey) redo(); else undo(); return; }   // Ctrl+Y／Ctrl+Shift+Z＝重做
     if((e.code === 'Delete' || e.code === 'Backspace') && S.sel){ e.preventDefault(); deleteSel(); return; }
+    if(editorKey(e)){ e.preventDefault(); return; }   // 有選取時：字母、方向鍵用來編輯音高，不觸發音效格
   }
+  if(volumeKey(e, held)){ e.preventDefault(); return; }   // 按住格子的鍵＋↑↓：調那一格的音量
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   const i = S.pads.findIndex(p => p.key === e.code);
   if(i < 0) return;

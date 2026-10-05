@@ -23,8 +23,11 @@ const S8 = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5], OFF8 = [0.5, 1.5, 2.5, 3.5], S16 = 
 const SW8 = [0, 0.67, 1, 1.67, 2, 2.67, 3, 3.67];
 /* 7 聲音階的和弦：延伸音名稱 → 從根音往上的音階級數 */
 const EXT = {'':[0, 2, 4], '7':[0, 2, 4, 6], '9':[0, 2, 4, 6, 8], 'add9':[0, 2, 4, 8], 'sus2':[0, 1, 4], 'sus4':[0, 3, 4],
-  '6':[0, 2, 4, 5], '69':[0, 2, 4, 5, 8], '9sus4':[0, 3, 4, 6, 8], '#11':[0, 2, 4, 6, 8, 10], '5':[0, 4, 7]};
-const PRI7 = [2, 6, 8, 5, 10, 3, 1, 4, 0, 7, 9];   // 排和弦時優先保留：三度、七度、九度、六度…最後才是五度與根音
+  '6':[0, 2, 4, 5], '69':[0, 2, 4, 5, 8], '9sus4':[0, 3, 4, 6, 8], '#11':[0, 2, 4, 6, 8, 10], '5':[0, 4, 7],
+  '11':[0, 2, 4, 6, 8, 10], '7add11':[0, 2, 4, 6, 10], 'add11':[0, 2, 4, 10], '13':[0, 2, 4, 6, 8, 12], '13sus4':[0, 3, 4, 6, 8, 12],
+  '7sus4':[0, 3, 4, 6], 'q':[0, 3, 6, 9]};   // q：四度堆疊（So What 排法）
+/* 排和弦時優先保留：三度、七度、九度、六／十三度、十一度…最後才是五度與根音 */
+const PRI7 = [2, 6, 8, 12, 5, 10, 3, 9, 1, 4, 0, 7];
 const SHARP = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'], FLAT = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
 const ALPHA = {kick:0.9, snare:0.8, clap:0.8, hat:0.45, ohat:0.45, tom:0.7};
 const scaleList = (root, sc) => { const iv = SCALES[sc].iv, out = []; for(let m = 12; m <= 120; m++) if(iv.includes(((m - root) % 12 + 12) % 12)) out.push(m); return out; };
@@ -92,15 +95,16 @@ function build(C){
   const T = {...BASE_T, ...(C.T || {})}, N = {...BASE_N, ...(C.N || {})};
 
   /* ---------- 和弦 ---------- */
+  /** 和弦名稱：基本型（m、7、maj7、6、sus）＋括號裡的延伸音，例如 Em7(11)、Cmaj7(9,♯11)、F7sus4(9,13) */
   const chordName = ch => { const iv = new Set([...ch.pcs].map(p => (p - ch.root + 12) % 12));
-    const third = iv.has(4) ? 4 : iv.has(3) ? 3 : 0, sev = iv.has(11) ? 'maj7' : iv.has(10) ? '7' : '';
-    let s = third === 3 ? 'm' : '';
-    if(third){
-      if(sev) s += sev === '7' ? (iv.has(2) ? '9' : '7') : (iv.has(2) ? 'maj9' : 'maj7');
-      else if(iv.has(9)) s += iv.has(2) ? '6/9' : '6';
-      else if(iv.has(2)) s += third === 3 ? '(add9)' : 'add9';
-      if(iv.has(6) && iv.has(7)) s += '♯11';
-    } else s += (sev === '7' ? (iv.has(2) ? '9' : '7') : sev) + (iv.has(5) ? 'sus4' : iv.has(2) ? 'sus2' : sev ? '' : iv.has(9) ? '6' : '5');
+    const third = iv.has(4) ? 4 : iv.has(3) ? 3 : 0, sev = iv.has(11) ? 'maj7' : iv.has(10) ? '7' : '', six = !sev && iv.has(9) && !!third;
+    let s = (third === 3 ? 'm' : '') + sev + (six ? '6' : '');
+    if(!third) s += iv.has(5) ? 'sus4' : iv.has(2) ? 'sus2' : sev ? '' : '5';
+    const t = [];
+    if(iv.has(1)) t.push('♭9'); if(iv.has(2) && (third || iv.has(5))) t.push('9'); if(iv.has(3) && third === 4) t.push('♯9');
+    if(iv.has(5) && third) t.push('11'); if(iv.has(6) && iv.has(7)) t.push('♯11'); if(iv.has(8) && iv.has(7)) t.push('♭13');
+    if(iv.has(9) && (sev || !third)) t.push('13');
+    if(t.length) s += sev || six || !third ? `(${t.join(',')})` : t.join() === '9' ? (third === 3 ? '(add9)' : 'add9') : `(add${t.join(',')})`;
     return NAMES[ch.root] + s + (ch.bass !== ch.root ? '/' + NAMES[ch.bass] : ''); };
   const mkProg = (spec, label) => { let b = 0;
     const P = spec.map(([d, ext, len, o = {}]) => {
@@ -111,6 +115,8 @@ function build(C){
       const iv = new Set(tones.map(p => (p - root + 12) % 12)), bad = [];
       if(iv.has(4) && iv.has(10) && !C.allowDom) bad.push('屬七'); if(iv.has(3) && iv.has(11)) bad.push('小大七');
       if(iv.has(4) && iv.has(8) && !iv.has(7)) bad.push('增'); if(iv.has(3) && iv.has(6) && !iv.has(7)) bad.push('減'); if(iv.has(1)) bad.push('♭9');
+      // 延伸音的避免音：大三度上的 11 度、♯9（藍調例外）、和五度只差半音的 ♭13
+      if(iv.has(4) && iv.has(5)) bad.push('大三度上的 11 度'); if(iv.has(3) && iv.has(4) && !C.allowDom) bad.push('♯9'); if(iv.has(7) && iv.has(8)) bad.push('♭13');
       ch.name = chordName(ch); if(bad.length) throw Error(`${C.id} ${label} ${ch.name}：${bad.join('、')}`);
       b += len; return ch; });
     if(b !== 16) throw Error(`${C.id} ${label} 要剛好 4 小節（目前 ${b} 拍）`);
@@ -127,7 +133,7 @@ function build(C){
   /** 會不會衝突：不是和弦音，又剛好在和弦音上方半音，或和根音成三全音 */
   const clash = (pc, c) => !c.pcs.has(pc) && ([...c.pcs].some(t => (pc - t + 12) % 12 === 1) || (pc - c.root + 12) % 12 === 6);
   const SAFE_ADD = new Set((C.safeAdd || []).map(s => (C.root + s) % 12));
-  const safePc = pc => SAFE_ADD.has(pc) || PROG.every(c => !clash(pc, c));
+  const safePc = pc => SAFE_ADD.has(pc) || [...PROG, ...(ALT || [])].every(c => !clash(pc, c));   // 主進行和第二進行可能同時播，兩邊都要安全
   const safeDegs = (lo, hi) => { const o = []; for(let d = lo; d <= hi; d++) if(safePc(pcOf(d))) o.push(d); return o; };
 
   /* ---------- 聲部進行 ---------- */
@@ -212,11 +218,11 @@ function build(C){
   const curve = (B, b0, b1, fn, pr, wf = () => 1) => { const pts = [], n = Math.max(12, Math.round((b1 - b0) * 10));
     for(let j = 0; j <= n; j++){ const u = j / n; pts.push({x:+((b0 + (b1 - b0) * u) / B).toFixed(5), y:+clamp(fn(u), MEL_TOP, MEL_BOT).toFixed(5), w:+wf(u).toFixed(3)}); }
     return {type:'line', pts, ...pr}; };
-  /** 和弦物件：只有在「調內疊三度」剛好等於這個和弦時才用（□ 七和弦也一樣），否則改畫成一條條的音 */
-  const chordObj = (B, b, len, c, pr) => withKey(HK.ownKey ? HK : null, () => { const y = +midiToY(inWin(c.root, 43, 54)).toFixed(5);
-    for(const shape of ['sq', 'tri']){ const ns = chordNotes({y, shape}); if(ns.every(m => c.pcs.has(m % 12))) return {type:'chord', x:+(b / B).toFixed(5), y, len:+(len / B).toFixed(5), shape, ...pr}; }
-    return null; });
-  const voiced = (B, b, len, v, pr, w = 1) => v.map(m => note(B, b, len, m, pr, w));
+  /** 一個排好的和弦（MIDI 音的陣列）→ 和弦物件：每個音都寫在 notes 裡，形狀＝音數，編輯器裡可以個別調整
+     和弦物件的總音量是 √音數 的比例（一條條的線是直接相加），所以濃度稍微調高補回來；w 是這一下的力度 */
+  const voiced = (B, b, len, v, pr, w = 1) => { const ns = [...new Set(v.map(fit))].sort((a, c) => a - c);
+    return {type:'chord', x:+(b / B).toFixed(5), y:+midiToY(ns[0]).toFixed(5), len:+(len / B).toFixed(5), shape:shapeOfCount(ns.length), ...pr,
+      alpha:+clamp(pr.alpha * 1.35 * (0.55 + 0.45 * w), 0.15, 0.95).toFixed(3), notes:ns.map(m => +midiToY(m).toFixed(5)).reverse()}; };
   const drop = (B, b, lane, alpha, extra = {}) => ({type:'drop', x:+(b / B).toFixed(5), lane, alpha:clamp(alpha, 0.15, 1), ...PDEF, rev:0.1, ...(K.lane[lane] || {}), ...extra});
   /** 一小節的鼓型：{lane:[拍, 或 [拍, 力度倍率, 額外參數]]} */
   const bar = (pat, B, off, mul = 1, extra = {}) => Object.entries(pat).flatMap(([lane, beats]) => beats.map((h, j) => {
@@ -251,7 +257,7 @@ function build(C){
     /* ---- 和聲（全部跟著 4 小節進行） ---- */
     pad:(o, tm, name) => [{name, mode:'loop', beats:16, vol:o.vol ?? 0.55, ...HK}, PROG.map((c, i) => voiced(16, c.b0, c.len - 0.08, lead(PROG, o.v)[i], syn(tm), 0.85))],
     stabs:(o, tm, name) => [{name, mode:'loop', beats:16, vol:0.6, ...HK}, [0, 1, 2, 3].map(k => RH.stab.map(([s, l]) => { const b = k * 4 + s, c = ch(b);
-      return chordObj(16, b, l, c, syn(tm)) || voiced(16, b, l, voiceAt(PROG, b, {n:3, lo:55, hi:74}), syn(tm)); }))],
+      return voiced(16, b, l, voiceAt(PROG, b, o.v || {n:4, lo:52, hi:74, top:72}), syn(tm)); }))],
     arp:(o, tm, name) => { const st = o.step || RH.arpStep || 0.5, pat = o.pat || [0, 1, 2, 3, 4, 3, 2, 1];
       return [{name, mode:'loop', beats:16, vol:0.55, ...HK}, notes(16, Array.from({length:16 / st}, (_, j) => { const b = j * st, v = voiceAt(PROG, b, o.v || {n:4, lo:55, hi:72});
         const ladder = [...v, v[0] + 12, v[1] + 12]; return [b, st, ladder[pat[j % pat.length]], j % Math.round(1 / st) === 0 ? 1 : 0.65]; }), syn(tm), 0.9)]; },

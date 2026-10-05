@@ -12,7 +12,7 @@ function buildBoard(){
     const el = document.createElement('div'); el.className = 'pad';
     el.style.gridRow = String(row + 1);
     el.style.gridColumn = `${row + 1 + col * 4} / span 4`;   // 每列錯開，像真的鍵盤
-    el.innerHTML = '<canvas></canvas><div class="empty"></div><span class="key"></span><span class="mode"></span><span class="name"></span>';
+    el.innerHTML = '<canvas></canvas><div class="empty"></div><span class="key"></span><span class="mode"></span><span class="name"></span><span class="vol"><i></i></span><span class="vtip"></span>';
     board.appendChild(el);
     const pe = {el, cv:el.querySelector('canvas'), cache:document.createElement('canvas'), dirty:true, was:null};
     padEls.push(pe);
@@ -34,7 +34,14 @@ function refreshPad(i){
   pe.el.querySelector('.empty').textContent = S.mode === 'edit' ? '＋' : '';
   pe.el.classList.toggle('isEmpty', !p.objects.length);
   pe.el.style.setProperty('--c', padColor(p));
-  pe.dirty = true;
+  syncPadMix(i);
+  pe.dirty = true; pe.fresh = false;
+}
+/** 音量條、靜音／獨奏的樣子 */
+function syncPadMix(i){
+  const pe = padEls[i]; if(!pe) return;
+  pe.el.style.setProperty('--vol', (S.pads[i].vol / 1.2 * 100).toFixed(1) + '%');
+  pe.el.classList.toggle('muted', mixSilenced(i)); pe.el.classList.toggle('solo', MIX.solo.has(i));
 }
 function refreshAllPads(){ S.pads.forEach((_, i) => refreshPad(i)); }
 function sizeThumbs(){
@@ -42,7 +49,7 @@ function sizeThumbs(){
   const r = padEls[0].el.getBoundingClientRect(); if(!r.width) return;
   TDPR = Math.min(2, devicePixelRatio || 1); TW = r.width; TH = r.height;
   for(const c of [thumbScratch, ...padEls.flatMap(pe => [pe.cv, pe.cache])]){ c.width = Math.round(TW * TDPR); c.height = Math.round(TH * TDPR); }
-  padEls.forEach(pe => pe.dirty = true);
+  padEls.forEach(pe => { pe.dirty = true; pe.fresh = false; });
 }
 new ResizeObserver(sizeThumbs).observe(board);
 const thumbV = () => ({W:TW, H:TH, dpr:TDPR, s:thumbScratch, k:TH / 430});
@@ -58,7 +65,8 @@ function drawBoard(){
   if(!TW || S.view !== 'board' || S.editing !== null) return;
   padEls.forEach((pe, i) => {
     const st = padState(i), key = st.state === 'playing' ? 'p' + st.prog.toFixed(4) + st.stopping : st.state;
-    if(pe.dirty) renderThumbCache(i);
+    if(pe.dirty && !pe.fresh) renderThumbCache(i);   // fresh：別處（例如錄影）已經先畫好了
+    pe.fresh = false;
     if(pe.dirty || key !== pe.was){
       const c = ctxFor(pe.cv, TDPR); c.clearRect(0, 0, TW, TH); c.drawImage(pe.cache, 0, 0, TW, TH);
       if(st.state === 'playing'){ const p = S.pads[i]; withKey(p, () => drawPlayhead(c, p.objects, st.prog, thumbV(), padDur(p), padColor(p))); }

@@ -65,7 +65,12 @@ function drawDrop(c, o, V){
     c.beginPath(); c.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, R * (0.07 + rnd() * 0.17), 0, 7); c.fill(); }
   c.restore();
 }
-function chordGeom(o, V){ const cy = Y(V, midiToY(quant(o.y))), x0 = o.x * V.W, w = Math.max(6, o.len * V.W), h = Math.max(24 * V.k, o.size * 1.9 * V.k); return {cy, x0, w, h}; }
+/** 和弦的外框：上下包住所有的音 */
+function chordGeom(o, V){
+  const ys = chordNotes(o).filter(m => m <= MIDI_HI).map(m => Y(V, midiToY(m))), top = Math.min(...ys), bot = Math.max(...ys);
+  const x0 = o.x * V.W, w = Math.max(6, o.len * V.W), h = Math.max(24 * V.k, bot - top + 18 * V.k);
+  return {cy:(top + bot) / 2, x0, w, h, ys};
+}
 function chordPath(c, o, V, pad = 0){
   const {cy, x0, w, h} = chordGeom(o, V); c.beginPath();
   if(o.shape === 'tri'){ c.moveTo(x0 - pad, cy + h / 2 + pad); c.lineTo(x0 + w / 2, cy - h / 2 - pad * 1.6); c.lineTo(x0 + w + pad, cy + h / 2 + pad); c.closePath(); }
@@ -80,8 +85,10 @@ function drawChord(c, o, V){
   c.lineWidth = Math.max(1, (isSoft(o) ? 2 : 2.5) * V.k); c.strokeStyle = col;
   if(o.texture === 'dash') c.setLineDash([6 * V.k + 1, 5 * V.k + 1]);
   c.stroke(); c.setLineDash([]);
-  c.shadowBlur = 0; c.fillStyle = col;
-  for(const m of chordNotes(o)) if(m <= MIDI_HI){ c.beginPath(); c.arc(x0, Y(V, midiToY(m)), Math.max(1.2, 3 * V.k), 0, 7); c.fill(); }
+  c.shadowBlur = 0; c.fillStyle = col; c.strokeStyle = hexA(col, 0.55); c.lineWidth = Math.max(1, 1.5 * V.k);
+  const {w, ys} = chordGeom(o, V);
+  for(const y of ys){ c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + w, y); c.stroke();   // 每個音一條細線，看得出音高
+    c.beginPath(); c.arc(x0, y, Math.max(1.2, 3 * V.k), 0, 7); c.fill(); }
   c.restore();
 }
 function drawObj(c, o, V){ if(o.type === 'line') drawLineObj(c, o, V); else if(o.type === 'drop') drawDrop(c, o, V); else drawChord(c, o, V); }
@@ -92,10 +99,15 @@ function objBBox(o, V){
   if(o.type === 'drop'){ const R = dropRadius(o, V) * 2 + 4, x = o.x * V.W, y = Y(V, LANES[o.lane]); return [x - R, y - R, x + R, y + R]; }
   const {cy, x0, w, h} = chordGeom(o, V); return [x0 - 6, cy - h / 2 - 8, x0 + w + 6, cy + h / 2 + 6];
 }
-function drawSelection(c, o, V){
+/** 選取框；note：和弦裡被點選的那一個音（索引），會另外標亮 */
+function drawSelection(c, o, V, note = null){
   const [x0, y0, x1, y1] = objBBox(o, V);
   c.save(); c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.setLineDash([5, 4]); c.lineDashOffset = -performance.now() / 40;
-  c.strokeRect(x0, y0, x1 - x0, y1 - y0); c.restore();
+  c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  if(note !== null && o.type === 'chord'){ const {x0:cx, w, ys} = chordGeom(o, V), y = ys[note];
+    if(y != null){ c.setLineDash([]); c.strokeStyle = '#fff'; c.lineWidth = 3; c.shadowColor = toneColor(o.tone); c.shadowBlur = 10;
+      c.beginPath(); c.moveTo(cx - 4, y); c.lineTo(cx + w + 4, y); c.stroke(); } }
+  c.restore();
 }
 function drawPlayhead(c, objs, prog, V, dur, col = '#7cf0d0'){
   const {W, H, k} = V, sx = prog * W, kk = Math.max(k, .4);

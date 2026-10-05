@@ -46,7 +46,8 @@ const phrase = (B, list, pr, wf = u => 0.55 + 0.45 * Math.sin(u * Math.PI)) => {
 const curve = (B, b0, b1, fn, pr, wf = () => 1) => { const pts = [], n = Math.max(12, Math.round((b1 - b0) * 24));
   for(let j = 0; j <= n; j++){ const u = j / n; pts.push({x:+((b0 + (b1 - b0) * u) / B).toFixed(5), y:+clamp(fn(u), MEL_TOP, MEL_BOT).toFixed(5), w:+wf(u).toFixed(3)}); }
   return {type:'line', pts, ...pr}; };
-const chord = (B, b, len, m, shape, pr) => ({type:'chord', x:b / B, y:midiToY(m), len:len / B, shape, ...pr});
+const chord = (B, b, len, m, shape, pr) => ({type:'chord', x:b / B, y:midiToY(m), len:len / B, shape, ...pr,
+  notes:[...(m - 12 >= MIDI_LO ? [m - 12] : []), ...chordNotes({y:midiToY(m), shape})].map(n => +midiToY(n).toFixed(5))});   // 每個音都寫出來（含低八度根音），編輯器裡可以個別調整
 const drop = (B, b, lane, alpha, extra = {}) => ({type:'drop', x:b / B, lane, alpha, ...PDEF, rev:0.12, ...extra});
 const drops = (B, beats, lane, alpha, extra = {}) => beats.map((b, j) => drop(B, b, lane,
   typeof alpha === 'function' ? alpha(j, b) : alpha, typeof extra === 'function' ? extra(j, b) : extra));

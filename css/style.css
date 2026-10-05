@@ -116,7 +116,7 @@ aside h3{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:60
 .dl{display:grid;grid-template-columns:1fr auto;align-items:center;font-size:12.5px;margin:4px 0}
 .dl .dv{color:var(--accent);font-size:11.5px;font-variant-numeric:tabular-nums}
 .dl input{grid-column:1 / -1;width:100%;margin:2px 0 0}
-.btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:16px}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:16px}
 .btns button{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 4px;cursor:pointer;font-size:13px}
 .note{font-size:12px;color:var(--muted);line-height:1.65;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
 .stage{flex:1;position:relative;margin:12px;border-radius:14px;overflow:hidden;border:1px solid var(--line);min-width:0;display:flex;flex-direction:column;background:#0e1017}
@@ -191,3 +191,39 @@ aside h3{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:60
 .impBtns button{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px;cursor:pointer;font-size:12.5px}
 .impBtns button.pri{background:var(--accent);color:#06221b;border-color:transparent;font-weight:700}
 .impEmpty{color:var(--muted);font-size:13px;padding:20px 0}
+
+/* ---------- 演奏時調音量 ---------- */
+.pad .vol{position:absolute;left:7px;right:7px;bottom:2px;height:3px;border-radius:2px;background:rgba(255,255,255,.07);opacity:0;transition:opacity .2s,height .15s;pointer-events:none}
+.pad .vol i{display:block;height:100%;width:var(--vol,66%);background:var(--c);border-radius:2px}
+body:not(.edit) .pad:not(.isEmpty) .vol{opacity:.6}
+.pad.volShow .vol{opacity:1 !important;height:5px}
+.pad .vtip{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;
+  text-shadow:0 1px 6px #000;background:rgba(0,0,0,.35);opacity:0;transition:opacity .15s;pointer-events:none}
+.pad.volShow .vtip{opacity:1}
+.pad.muted{opacity:.4}
+.pad.solo{outline:2px solid var(--square);outline-offset:1px}
+
+/* ---------- 混音台 ---------- */
+.hbtn.on{border-color:var(--accent);color:var(--accent)}
+#mixer{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.45);padding:10px 16px 12px}
+.mxHead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.mxHead b{font-size:14px}
+.mxMaster{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.mxMaster input{width:140px}
+#mxMasterV{min-width:40px;color:var(--text);font-variant-numeric:tabular-nums}
+.mxNote{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+.mxStrips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:60px}
+.mxEmpty{color:var(--muted);font-size:13px;padding:14px 4px}
+.mxS{flex:none;width:70px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 4px 6px;border-radius:10px;
+  background:var(--panel2);border:1px solid var(--line);border-top:3px solid var(--c)}
+.mxS.playing{box-shadow:0 0 14px -6px var(--c)}
+.mxS.silent{opacity:.5}
+.mxKey{font-weight:800;font-size:13px;min-width:24px;text-align:center;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.4)}
+.mxF{writing-mode:vertical-lr;direction:rtl;width:22px;height:110px;accent-color:var(--c);cursor:pointer}
+.mxV{font-size:12px;font-variant-numeric:tabular-nums}
+.mxB{display:flex;gap:3px}
+.mxB button{width:26px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-weight:800;font-size:11.5px;cursor:pointer}
+.mxB .mxM.on{background:#ff4d5e;border-color:#ff4d5e;color:#fff}
+.mxB .mxSo.on{background:var(--square);border-color:var(--square);color:#000}
+.mxN{font-size:11px;color:var(--muted);width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.mixOpen #boardView,body.mixOpen #ovView{padding-bottom:250px}
