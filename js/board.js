@@ -94,7 +94,7 @@ function boardHint(){
 /** 依可用高度決定音效板寬度，讓 4 列剛好放得下 */
 function fitBoard(){
   const r = $('#boardView').getBoundingClientRect(); if(!r.height) return;
-  const availH = r.height - 32 - $('#boardHint').offsetHeight - 16;
+  const availH = r.height - 32 - $('#boardHint').offsetHeight - $('#copyright').offsetHeight - 16;
   const w = ((availH - 30) / 4 / 0.75 + 8) * 43 / 4;   // 每格寬 = 板寬 × 4/43 − 8，高 = 寬 × 3/4
   board.style.setProperty('--bw', Math.max(520, Math.floor(w)) + 'px');
 }

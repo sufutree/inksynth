@@ -1,0 +1,34 @@
+InkSynth Pads
+Copyright (c) 2026 sufutree. All rights reserved.
+
+本軟體（InkSynth Pads，包含原始碼、介面與視覺設計、音色與和聲設計、範本內容、
+產生範本的工具與相關文件）之著作權屬於 sufutree 所有，保留所有權利。
+
+未經著作權人事先書面同意，任何人不得：
+1. 複製、修改、改作、散布、公開傳輸本軟體的全部或一部分；
+2. 將本軟體或其衍生作品用於商業用途，或轉售、出租、再授權；
+3. 以反向工程或其他方式擷取本軟體的程式碼、範本資料或設計，用於開發其他產品或服務。
+
+使用者可以透過官方網站（https://inksynth-alpha.vercel.app/）在瀏覽器中使用本軟體。
+使用者以本軟體創作的音樂、匯出的音效板檔案與錄製的影片，其權利歸使用者所有。
+
+本軟體依「現況」提供，不提供任何明示或默示之擔保；著作權人不對因使用本軟體所生之
+任何損害負責。
+
+本軟體所使用的第三方元件，依其各自附帶的授權條款使用。
+
+---
+
+English summary
+
+All rights reserved. No part of this software (source code, interface and visual
+design, sound and harmony design, templates, tools and documentation) may be
+copied, modified, distributed, publicly transmitted, used commercially, resold,
+sublicensed, or reverse engineered for use in other products without prior
+written permission from the copyright holder.
+
+Users may use the software through the official website in their browser. Music,
+exported boards and videos created by users with the software belong to the users.
+
+The software is provided "as is", without warranty of any kind. Third-party
+components are used under their own licenses.
