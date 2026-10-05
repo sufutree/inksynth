@@ -88,6 +88,11 @@ node tools/build-templates.js lofi pop # 只產生指定的範本
 2. 把匯出的 `.js` 檔放進 `templates/` 資料夾。
 3. 在 `templates/manifest.js` 的清單裡加上檔名（不含 `.js`）。
 
+## 授權
+
+© 2026 sufutree，保留所有權利。未經授權，不得複製、修改、散布或用於商業用途，詳見 [LICENSE](LICENSE)。
+使用者用本軟體創作的音樂與影片，權利歸使用者所有。
+
 ## 部署
 
 透過 [Vercel](https://vercel.com) 部署。推送到 `main` 分支就會自動更新網站。
