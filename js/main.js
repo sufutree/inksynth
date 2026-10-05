@@ -40,6 +40,9 @@ document.addEventListener('click', e => { const b = e.target.closest('button'); 
 const held = new Set();
 addEventListener('keydown', e => {
   const tag = e.target.tagName;
+  // 使用說明：F1 開關；說明打開時鍵盤不彈奏，只留 Esc 關閉
+  if(e.code === 'F1'){ e.preventDefault(); if(bindingKey){ bindingKey = false; syncEditorBar(); } toggleHelp(); return; }
+  if(helpOpen()){ if(e.code === 'Escape') closeHelp(); return; }
   if(bindingKey){
     e.preventDefault();
     if(e.code === 'Escape'){ bindingKey = false; syncEditorBar(); }
