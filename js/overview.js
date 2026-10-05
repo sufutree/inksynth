@@ -7,8 +7,8 @@ const ovCv = $('#ovCv'), ovG = ovCv.getContext('2d');
 /** 實際長度模式：以最長的那格為軸（至少 4 小節），較短的音效重複鋪滿 */
 const realBeats = () => Math.max(16, ...S.pads.filter(p => p.objects.length).map(p => p.beats));
 
-/* 總覽可以同時畫好幾份：主畫面上的這一張（OVM），也可以在背景另外畫（例如錄影用）。
-   每一份有自己的尺寸與快取（layer＝沒在動的部分），設定（OV）是共用的，背景那份也會照最後的總覽設定。 */
+/* 總覽可以同時畫好幾份：主畫面上的這一張（OVM），以及錄影時在背景另外畫的（recorder.js）。
+   每一份有自己的尺寸與快取（layer＝沒在動的部分），設定（OV）是共用的，所以錄影一定照最後的總覽設定。 */
 function makeOvInst(){ return {layer:document.createElement('canvas'), scratch:document.createElement('canvas'), W:0, H:0, dpr:1, key:''}; }
 const OVM = makeOvInst(), OV_INSTS = [OVM];
 function ovSize(I, W, H, dpr){

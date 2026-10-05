@@ -3,7 +3,7 @@
    audio.js — 合成引擎：多種音色、6 種鼓、ADSR、濾波、效果、播放管理
    ============================================================ */
 let ctx = null, master, revIn, dlyIn, delayNode, noiseBuf, crackleBuf, SAT, PW25, ORGAN, LITE = false;
-let OUT = null;   // 最後的輸出（壓縮器之後）
+let OUT = null;   // 最後的輸出（壓縮器之後），錄影時從這裡接出聲音
 /* 混音：總音量（存在瀏覽器裡）、靜音、獨奏（只在這次演奏有效，不存檔） */
 const MIX_STORE = 'inksynth-mix-v1', MIX = {master:1, mute:new Set(), solo:new Set()};
 try{ const m = JSON.parse(localStorage.getItem(MIX_STORE)); if(m && m.master != null) MIX.master = clamp(+m.master, 0, 1.5); }catch(e){}

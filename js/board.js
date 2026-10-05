@@ -65,7 +65,7 @@ function drawBoard(){
   if(!TW || S.view !== 'board' || S.editing !== null) return;
   padEls.forEach((pe, i) => {
     const st = padState(i), key = st.state === 'playing' ? 'p' + st.prog.toFixed(4) + st.stopping : st.state;
-    if(pe.dirty && !pe.fresh) renderThumbCache(i);   // fresh：別處（例如錄影）已經先畫好了
+    if(pe.dirty && !pe.fresh) renderThumbCache(i);   // fresh：錄影時已經先畫好了
     pe.fresh = false;
     if(pe.dirty || key !== pe.was){
       const c = ctxFor(pe.cv, TDPR); c.clearRect(0, 0, TW, TH); c.drawImage(pe.cache, 0, 0, TW, TH);

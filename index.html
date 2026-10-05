@@ -24,6 +24,18 @@
     <label>BPM <input type="number" id="bpm" min="50" max="200"></label>
     <label>啟動對齊 <select id="quant"><option value="off">立即</option><option value="beat">對拍</option><option value="bar">對小節</option></select></label>
     <button class="hbtn" id="mixBtn" title="演奏時調整每一格的音量、靜音、獨奏">🎚 混音台</button>
+    <div class="menuWrap" id="recWrap">
+      <button class="hbtn rec" id="recBtn" title="把演奏錄成影片（畫面＋聲音）">⏺ 錄影</button>
+      <div class="menu" id="recMenu" hidden>
+        <div class="menuTitle">要錄哪個畫面？</div>
+        <button data-rec="board">⌨ 主畫面（音效板）</button>
+        <button data-rec="overview">◎ 疊合總覽</button>
+        <hr>
+        <button data-rec="split">▤ 兩者・分割畫面（一個檔案）</button>
+        <button data-rec="files">⧉ 兩者・分成兩個檔案</button>
+        <div class="menuNote">疊合總覽照最後的總覽設定錄，演奏時可以待在主畫面調音量・錄影時請讓這個分頁保持在前景</div>
+      </div>
+    </div>
     <button class="hbtn stop" id="stopAll">■ 全部停止</button>
     <select id="tpl" class="tplSel"><option value="">🎼 範本…</option></select>
     <div class="menuWrap">
@@ -196,6 +208,8 @@
 <script src="js/library.js"></script>
 <script src="templates/manifest.js"></script>
 <script src="js/mixer.js"></script>
+<script src="js/vendor/mp4-muxer.min.js"></script>
+<script src="js/recorder.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

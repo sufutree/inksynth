@@ -113,7 +113,7 @@ function load(){
 const hadSave = load();
 if(!hadSave) S.pads = PAD_KEYS.map((_, i) => newPad(i));
 syncGlobals(); syncBoardName(); buildBoard(); setMode('play'); setView('board'); syncTools(); syncOvOptions();
-(function frame(){ requestAnimationFrame(frame); drawBoard(); drawEditor(); ovFrame(); })();
+(function frame(){ requestAnimationFrame(frame); drawBoard(); drawEditor(); ovFrame(); recFrame(); })();
 loadTemplateFiles().then(() => {
   fillTemplateSelect();
   const first = templateList()[0];
