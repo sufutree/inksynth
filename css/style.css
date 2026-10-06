@@ -278,3 +278,5 @@ body.mixOpen #helpTip{bottom:266px}
   .hnav button.on{box-shadow:inset 0 -2px 0 var(--accent)}
   .hbody{padding:4px 16px 20px}
 }
+.mxEnh{display:flex;align-items:center;gap:5px;color:var(--text);cursor:pointer;padding:3px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.mxEnh input{accent-color:var(--accent)}

@@ -165,6 +165,7 @@
   <div class="mxHead">
     <b>🎚 混音台</b>
     <label class="mxMaster">總音量 <input type="range" id="mxMaster" min="0" max="1.5" step="0.01"><span id="mxMasterV"></span></label>
+    <label class="mxEnh" title="立體聲殘響、合唱、母帶飽和、人性化、力度表情、更擬真的鼓；關掉就是原本的聲音，可以來回比較"><input type="checkbox" id="enhToggle"> ✨ 音色增強</label>
     <span class="mxNote">只列出正在播放、或設了靜音／獨奏的格子・在格子上滾動滑鼠滾輪，或按住格子的鍵再按 ↑↓ 也能調音量</span>
     <button class="hbtn" id="mxReset">取消全部靜音／獨奏</button>
     <button class="hbtn" id="mxClose">✕</button>
@@ -289,8 +290,8 @@
           <table class="ht">
             <tr><th>工具</th><th>用法</th></tr>
             <tr><td><kbd>1</kbd> ⬚ 選取</td><td>點一下選取，在空白處拖曳可以框選，<kbd>Shift</kbd>＋點可以加選。選好後可以拖動，也可以改音色。對和弦再點一次，可以選中其中一個音。</td></tr>
-            <tr><td><kbd>2</kbd> 〰 水墨旋律線</td><td>由左往右自由畫。白色階梯就是實際聽到的音。點一下＝短音。</td></tr>
-            <tr><td><kbd>3</kbd> ♪ 音符</td><td>點一下放一個音，往右拖可以拉長，點已經有的音符會刪掉它。也可以用鍵盤 <kbd>A</kbd>–<kbd>G</kbd> 一個一個輸入。</td></tr>
+            <tr><td><kbd>2</kbd> 〰 水墨旋律線</td><td>由左往右自由畫。白色階梯就是實際聽到的音。點一下＝短音。<br>畫的時候按住 <kbd>Shift</kbd>：音高鎖在目前這個音，畫成一條水平線，放開才跳到滑鼠所指的音。<br>按住 <kbd>Ctrl</kbd>：換音會吸到最接近的拍點（依目前的對齊格線），節奏就會很整齊；停在某個拍點附近上下移動，改的是從那一拍開始的音。</td></tr>
+            <tr><td><kbd>3</kbd> ♪ 音符</td><td>點一下放一個音，往右拖可以拉長，點已經有的音符會刪掉它。也可以用鍵盤 <kbd>A</kbd>–<kbd>G</kbd> 一個一個輸入，打錯了按 <kbd>Backspace</kbd> 收回剛才那個音，可以接著繼續打。</td></tr>
             <tr><td><kbd>4</kbd> △ 和弦</td><td>點一下放一個和弦，往右拖可以拉長。和弦形狀決定有幾個音（△ 3 個、□ 4 個、○ 5 個）。</td></tr>
             <tr><td><kbd>5</kbd> ● 鼓</td><td>只在下方節奏區使用，點一下放、再點一下拿掉。</td></tr>
             <tr><td><kbd>6</kbd> ⌫ 橡皮擦</td><td>按住拖曳，擦掉經過的任何東西。</td></tr>
@@ -335,7 +336,8 @@
             <li><b>推桿</b>：這一格的音量。跟編輯器裡的「音量」是同一個值，會一起存檔。</li>
             <li><b>M</b> 靜音：讓這格暫時沒有聲音，格子會變暗。</li>
             <li><b>S</b> 獨奏：只聽設了 S 的格子，格子會有黃框。</li>
-            <li><b>總音量</b>：整體大小聲。</li>
+            <li><b>總音量</b>：整體大小聲（殘響、延遲也會跟著調）。</li>
+            <li><b>✨ 音色增強</b>：立體聲殘響、合唱、更擬真的鼓，以及時間和力度的細微變化，讓聲音更自然。關掉就是原本的聲音，可以邊播邊切換比較，選擇會記在這個瀏覽器裡。</li>
             <li>「取消全部靜音／獨奏」一鍵恢復，按 ✕ 關閉混音台。</li>
           </ul>
           <p class="tip">💡 靜音和獨奏只在這次演奏有效，重新整理網頁後會恢復。</p>
@@ -395,6 +397,9 @@
             <tr><td><kbd>7</kbd>–<kbd>0</kbd></td><td>切換對齊格線：1/4、1/8、三連音、1/16</td></tr>
             <tr><td><kbd>A</kbd>–<kbd>G</kbd></td><td>音符工具：在游標處輸入下一個音（<kbd>Shift</kbd>＝升記號）。選取工具：把選取的音改成最接近的那個音</td></tr>
             <tr><td><kbd>R</kbd></td><td>音符工具：休止一格</td></tr>
+            <tr><td><kbd>Backspace</kbd></td><td>音符工具：收回剛才那個音（或剛才的休止），改選前一個音，可以接著繼續輸入</td></tr>
+            <tr><td>畫的時候按住 <kbd>Shift</kbd></td><td>水墨旋律線：鎖住目前的音，放開才跳到滑鼠所指的音</td></tr>
+            <tr><td>畫的時候按住 <kbd>Ctrl</kbd></td><td>水墨旋律線：換音吸到最接近的拍點</td></tr>
             <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>選取的音沿音階上下移動（<kbd>Shift</kbd>＝八度）</td></tr>
             <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>選旁邊的音（<kbd>Shift</kbd>＝擴大選取範圍）</td></tr>
             <tr><td><kbd>+</kbd> <kbd>-</kbd></td><td>和弦加一個音／減一個音</td></tr>

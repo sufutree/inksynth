@@ -300,10 +300,10 @@ function hintText(){
     case 'drop': return `● 鼓：在下方節奏區點一下放置、再點一下拿掉，按住橫拖可以連續填格・對齊 ${GRIDS[b.grid].zh}・濃度＝力度`;
     case 'erase': return '⌫ 橡皮擦：按住拖曳擦掉線條、音符、鼓或和弦';
     case 'chord': return `${SHAPES[b.shape].zh} 和弦（${SHAPES[b.shape].sub}）：點一下放置，按住往右拖曳可以拉長・之後用「⬚ 選取」點兩下和弦可以調每一個音｜${TONES[b.tone].zh}${drums}`;
-    case 'note': return `♪ 音符：點一下放一個音（放完自動選取）、往右拖拉長、點已有的音符＝刪除｜鍵盤：A–G 在黃色虛線處輸入下一個音（Shift＝升，長度＝目前格線）・R 休止・7–0 換格線長度（先 1/8 再 1/4 就是切分音）・↑↓ 調音高・←→ 選音（Shift 擴大）・Esc 取消選取｜${key}｜${TONES[b.tone].zh}${drums}`;
+    case 'note': return `♪ 音符：點一下放一個音（放完自動選取）、往右拖拉長、點已有的音符＝刪除｜鍵盤：A–G 在黃色虛線處輸入下一個音（Shift＝升，長度＝目前格線）・R 休止・Backspace 收回剛才那個音・7–0 換格線長度（先 1/8 再 1/4 就是切分音）・↑↓ 調音高・←→ 選音（Shift 擴大）・Esc 取消選取｜${key}｜${TONES[b.tone].zh}${drums}`;
   }
   const dyn = b.dyn === 'speed' ? '畫得越慢越重越響' : b.dyn === 'pressure' ? '筆壓越大越響（滑鼠會改用速度）' : '力度固定';
-  return `〰 水墨旋律線：由左往右畫，白色階梯＝實際聽到的音（${key}）・${dyn}・點一下＝短音｜${TONES[b.tone].zh}｜Cutoff ${fmtHz(cutoffOf(b.size))}${drums}`;
+  return `〰 水墨旋律線：由左往右畫，白色階梯＝實際聽到的音（${key}）・按住 Shift＝鎖住目前的音・按住 Ctrl＝換音吸到最近的拍點（${GRIDS[b.grid].zh}）・${dyn}・點一下＝短音｜${TONES[b.tone].zh}｜Cutoff ${fmtHz(cutoffOf(b.size))}${drums}`;
 }
 function syncTools(){
   const t = target(), b = S.brush, on = (sel, attr, val) => $$(sel + ' button').forEach(x => x.classList.toggle('on', x.dataset[attr] === String(val)));
@@ -381,6 +381,8 @@ function hitObj(o, p){
 function topHit(p, ok = () => true){ const objs = EP().objects; for(let i = objs.length - 1; i >= 0; i--) if(ok(objs[i]) && hitObj(objs[i], p)) return objs[i]; return null; }
 function eraseAt(p){ const pad = EP(), n = pad.objects.length; pad.objects = pad.objects.filter(o => !hitObj(o, p));
   if(pad.objects.length !== n) changed(); }
+/** 吸到最接近的格線（依目前選的對齊格線） */
+const snapBeat = x => { const st = stepsOf(); return clamp(Math.round(clamp(x, 0, 1) * st) / st, 0, 1); };
 /** 筆觸力度：筆壓或速度（慢＝重） */
 function strokeW(e, p){
   const b = S.brush;
@@ -447,7 +449,7 @@ function onDown(e){
   if(b.tool === 'line'){
     const y = clamp(p.y, MEL_TOP, MEL_BOT), w = b.dyn === 'fixed' ? 1 : strokeW(e, p);
     stroke = {sx:p.sx, sy:p.sy, t:e.timeStamp, w};
-    cur = brushObj({type:'line', pts:[{x:clamp(p.x, 0, 1), y, w}]});
+    cur = brushObj({type:'line', pts:[{x:e.ctrlKey || e.metaKey ? snapBeat(p.x) : clamp(p.x, 0, 1), y, w}]});
     previewStart(b, quant(y), w);
   } else if(b.tool === 'note'){
     const hit = topHit(p, isNoteObj);
@@ -469,11 +471,16 @@ function onMove(e){
   const p = pos(e); hover = p;
   if(paint){ if(inDrumZone(p)) paintDrum(p); return; }
   if(cur){
-    const last = cur.pts[cur.pts.length - 1], x = clamp(p.x, 0, 1), y = clamp(p.y, MEL_TOP, MEL_BOT);
+    /* Shift：音高鎖在按下那一刻的音（畫成水平線），放開才跳回滑鼠所指的音
+       Ctrl：點吸到最接近的格線，換音一定落在拍點上；停在同一個拍點附近上下移動，改的是「從這一拍開始的音」 */
+    const last = cur.pts[cur.pts.length - 1], snap = e.ctrlKey || e.metaKey, x = snap ? snapBeat(p.x) : clamp(p.x, 0, 1);
+    if(e.shiftKey) cur.lockY ??= +midiToY(quant(last.y)).toFixed(5); else cur.lockY = null;
+    const y = cur.lockY ?? clamp(p.y, MEL_TOP, MEL_BOT);
     const w = S.brush.dyn === 'fixed' ? 1 : strokeW(e, p);
     stroke = {sx:p.sx, sy:p.sy, t:e.timeStamp, w};
     previewMove(quant(y), w);
-    if((x - last.x) * W >= 2) cur.pts.push({x, y, w:+w.toFixed(3)});   // 時間只能往前
+    if(snap){ if(x > last.x + 1e-6) cur.pts.push({x, y, w:+w.toFixed(3)}); else if(Math.abs(x - last.x) < 1e-6){ last.y = y; inkDirty = true; } }
+    else if((x - last.x) * W >= 2) cur.pts.push({x, y, w:+w.toFixed(3)});   // 時間只能往前
   } else if(noteDrag){
     const steps = stepsOf(), len = clamp(Math.ceil((p.x - noteDrag.x0) * steps - 0.15), 1, Math.round((1 - noteDrag.x0) * steps));
     const m = quant(clamp(p.y, MEL_TOP, MEL_BOT));
@@ -512,7 +519,7 @@ function endStroke(){
       const p0 = cur.pts[0], steps = stepsOf(), x0 = Math.floor(p0.x * steps) / steps, y = midiToY(quant(p0.y));
       cur.pts = [{x:x0, y, w:p0.w}, {x:Math.min(1, x0 + 0.94 / steps), y, w:p0.w}];
     }
-    pushHistory(); EP().objects.push(cur); previewEnd(); cur = null; stroke = null; changed();
+    delete cur.lockY; pushHistory(); EP().objects.push(cur); previewEnd(); cur = null; stroke = null; changed();
   }
   if(noteDrag){ const o = noteDrag.o; noteDrag = null; changed(); setSel([o]); NAV = null; }   // 自動選取剛放的音，可以接著用鍵盤輸入
   if(paint){ paint = null; const h = EP()._hist; if(h && h.length && h[h.length - 1] === JSON.stringify(EP().objects)) h.pop(); }
@@ -598,6 +605,22 @@ function typeNote(pc){
   pushHistory(); REST = null;
   const nd = {o:brushObj({type:'line', pts:[]}), x0, len:Math.min(1, (1 - x0) * steps), m};   // 長度＝目前格線一格
   setNotePts(nd); pad.objects.push(nd.o); changed(); setSel([nd.o]); auditionNote(nd.o);
+}
+/** 音符模式的 Backspace：像復原剛才那一步，但繼續留在輸入狀態
+   ・剛按了休止 → 收回一格休止
+   ・選著一個音 → 刪掉它，改選前一個音，游標停在被刪的音原本的位置，接著打就會放回同一個地方 */
+function noteBackspace(){
+  return withKey(EP(), () => {
+    if(REST && REST.after === S.sel){ const x = REST.x - 1 / stepsOf(); REST = null;
+      if(x > insertPos() + 1e-6) REST = {after:S.sel, x}; inkDirty = true; return; }
+    if(SELS.length !== 1 || !isNoteObj(S.sel)){ if(SELS.length) deleteSel(); return; }
+    const pad = EP(), gone = S.sel, x0 = gone.pts[0].x;
+    pushHistory(); pad.objects = pad.objects.filter(o => o !== gone); changed();
+    const prev = noteItems().filter(t => t.x < x0 - 1e-6).pop();
+    if(prev){ if(prev.i !== null) materialize(prev.o); setSel([prev.o], prev.i); } else setSel([]);
+    REST = null; if(x0 > insertPos() + 1e-6) REST = {after:S.sel, x:x0};   // 前面有休止才保留游標位置，否則下一次 Backspace 會白按
+    NAV = null; inkDirty = true;
+  });
 }
 /** 休止：游標往後空一格（目前的格線長度） */
 function typeRest(){

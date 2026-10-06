@@ -65,6 +65,7 @@ addEventListener('keydown', e => {
   if(S.editing !== null){
     if(e.code === 'Space'){ e.preventDefault(); togglePreview(); return; }
     if(undoKey){ e.preventDefault(); if(e.code === 'KeyY' || e.shiftKey) redo(); else undo(); return; }   // Ctrl+Y／Ctrl+Shift+Z＝重做
+    if(e.code === 'Backspace' && S.brush.tool === 'note'){ e.preventDefault(); noteBackspace(); return; }   // 音符模式：收回剛才那個音，繼續輸入
     if((e.code === 'Delete' || e.code === 'Backspace') && S.sel){ e.preventDefault(); deleteSel(); return; }
     if(editorKey(e)){ e.preventDefault(); return; }   // 有選取時：字母、方向鍵用來編輯音高，不觸發音效格
   }

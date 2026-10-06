@@ -72,6 +72,8 @@ $('#mxStrips').addEventListener('input', e => { const s = e.target.closest('.mxS
 $('#mxStrips').addEventListener('click', e => { const s = e.target.closest('.mxS'); if(!s) return;
   if(e.target.classList.contains('mxM')) toggleMute(+s.dataset.i); else if(e.target.classList.contains('mxSo')) toggleSolo(+s.dataset.i); });
 $('#mxMaster').oninput = e => { setMasterVolume(+e.target.value); mixerSync(); };
+$('#enhToggle').checked = ENH;
+$('#enhToggle').onchange = e => { setEnhance(e.target.checked); toast(e.target.checked ? '✨ 音色增強：開（新的殘響、合唱、人性化與鼓）' : '音色增強：關（原本的聲音）'); };
 $('#mxReset').onclick = () => { MIX.mute.clear(); MIX.solo.clear(); applyMix(); };
 function toggleMixer(show = $('#mixer').hidden){
   $('#mixer').hidden = !show; $('#mixBtn').classList.toggle('on', show); document.body.classList.toggle('mixOpen', show);

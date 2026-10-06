@@ -11,6 +11,14 @@ const mixSilenced = i => MIX.mute.has(i) || (MIX.solo.size > 0 && !MIX.solo.has(
 /** 一格實際的音量：格子的音量 × 靜音／獨奏 */
 const padGain = i => typeof i === 'number' ? (S.pads[i] ? S.pads[i].vol : 0) * (mixSilenced(i) ? 0 : 1) : null;
 const LOOSE = {srcs:[], out:null};   // 試聽用的零散音源
+/* 音色增強（可以在混音台開關，記在瀏覽器裡）：
+   立體聲殘響（早期反射＋越來越暗的尾巴）、合唱、母帶輕微飽和、人性化（時間與力度的微小差異）、
+   力度表情（起音、亮度、撥弦瞬間微升音）、延遲出現的顫音、更擬真的鼓（金屬 Hi-hat、大鼓敲擊聲、小鼓雙共鳴） */
+const ENH_STORE = 'inksynth-enh-v1';
+let ENH = true; try{ if(localStorage.getItem(ENH_STORE) === '0') ENH = false; }catch(e){}
+let REV = null, SATN = null, IR_OLD = null, IR_NEW = null, choIn = null;
+/* 合唱的送出量：鋪底、鍵盤、合成器類的音色才加，鼓和低音不加 */
+const CHO = {sawtooth:0.22, supersaw:0.12, organ:0.3, choir:0.25, bell:0.28, triangle:0.12, pluck:0.15, square:0.1, pulse:0.12};
 
 function curve(k){ const n = 2048, c = new Float32Array(n);
   for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; }
@@ -21,20 +29,32 @@ function initAudio(){
   if(ctx){ if(ctx.state !== 'running') ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
   const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(ctx.destination); OUT = comp;
-  master = ctx.createGain(); master.gain.value = 0.75 * MIX.master; master.connect(comp);
+  // 總音量 →（母帶飽和）→ 壓縮器。殘響、延遲、合唱也都匯進總音量，總音量滑桿才調得到它們
+  master = ctx.createGain(); master.gain.value = 0.75 * MIX.master;
+  SATN = ctx.createWaveShaper(); SATN.curve = tapeCurve(); SATN.oversample = '2x'; SATN.connect(comp);
 
-  // 殘響：用衰減噪音產生 impulse response
-  const conv = ctx.createConvolver(), len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
-  for(let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
-  conv.buffer = ir; revIn = ctx.createGain(); const revOut = ctx.createGain(); revOut.gain.value = 0.55;
-  revIn.connect(conv); conv.connect(revOut); revOut.connect(comp);
+  // 殘響：舊版是單純衰減的雜訊；新版有早期反射、左右聲道不同、尾巴越來越暗
+  REV = ctx.createConvolver(); IR_OLD = makeOldIR(); IR_NEW = makeNewIR(IR_OLD);
+  revIn = ctx.createGain(); const revOut = ctx.createGain(); revOut.gain.value = 0.55;
+  revIn.connect(REV); REV.connect(revOut); revOut.connect(master);
 
   // 延遲：附點八分音符
   dlyIn = ctx.createGain(); delayNode = ctx.createDelay(2);
   const fb = ctx.createGain(), dl = ctx.createBiquadFilter(), dw = ctx.createGain();
   fb.gain.value = 0.38; dl.type = 'lowpass'; dl.frequency.value = 3000; dw.gain.value = 0.6;
-  dlyIn.connect(delayNode); delayNode.connect(dl); dl.connect(fb); fb.connect(delayNode); dl.connect(dw); dw.connect(comp);
+  dlyIn.connect(delayNode); delayNode.connect(dl); dl.connect(fb); fb.connect(delayNode); dl.connect(dw); dw.connect(master);
   updateDelayTime();
+
+  // 合唱：左右各一條被慢速 LFO 輕輕搖動的短延遲，只有送進來的音色才有
+  choIn = ctx.createGain();
+  for(const [side, base, rate] of [[-1, 0.014, 0.53], [1, 0.019, 0.71]]){
+    const d = ctx.createDelay(0.05), lfo = ctx.createOscillator(), lg = ctx.createGain(), wet = ctx.createGain();
+    d.delayTime.value = base; lfo.frequency.value = rate; lg.gain.value = 0.0028; wet.gain.value = 0.75;
+    lfo.connect(lg); lg.connect(d.delayTime); lfo.start();
+    choIn.connect(d); d.connect(wet);
+    if(ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = side * 0.8; wet.connect(pn); pn.connect(master); } else wet.connect(master);
+  }
+  applyEnhance();
 
   SAT = curve(4);
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -53,8 +73,40 @@ function initAudio(){
   { const N = 24, re = new Float32Array(N), im = new Float32Array(N);
     [[1,1],[2,.75],[3,.5],[4,.45],[6,.3],[8,.25],[10,.12],[12,.1],[16,.06]].forEach(([h, a]) => im[h] = a);
     ORGAN = ctx.createPeriodicWave(re, im); }
-  LOOSE.out = {dry:master, rev:revIn, dly:dlyIn};
+  LOOSE.out = {dry:master, rev:revIn, dly:dlyIn, cho:choIn};
 }
+/** 母帶飽和：非常輕微的軟削波，讓聲音比較溫暖、整體一點（音量小的地方幾乎不變） */
+function tapeCurve(){ const n = 4096, c = new Float32Array(n), k = 1.6, norm = Math.tanh(k), slope = 0.7 + 0.3 * k / norm;   // 除以 slope：小音量時增益剛好是 1，不會整體變大聲
+  for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; c[i] = (0.7 * x + 0.3 * Math.tanh(k * x) / norm) / slope; } return c; }
+function makeOldIR(){
+  const len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for(let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+  return ir;
+}
+/** 新的殘響：12 ms 預延遲、14 個早期反射（左右不同）、指數衰減的尾巴，高頻衰減得比低頻快；總能量和舊版一樣，殘響量不變 */
+function makeNewIR(old){
+  const sr = ctx.sampleRate, len = Math.floor(sr * 2.6), pre = Math.floor(sr * 0.012), ir = ctx.createBuffer(2, len, sr);
+  for(let ch = 0; ch < 2; ch++){
+    const d = ir.getChannelData(ch), R = rng(ch ? 991 : 337); let lp = 0;
+    for(let k = 0; k < 14; k++){ const t = pre + Math.floor((0.003 + R() * 0.07) * sr); d[t] += (R() < 0.5 ? -1 : 1) * (0.6 - k * 0.035); }
+    for(let i = pre; i < len; i++){
+      const u = (i - pre) / (len - pre), a = 0.1 + 0.82 * Math.pow(u, 0.55);   // a 越大越暗
+      lp += ((Math.random() * 2 - 1) - lp) * (1 - a);
+      d[i] += lp * Math.exp(-u * 6.5) * Math.min(1, (i - pre) / (sr * 0.025)) * 2.2;
+    }
+  }
+  const energy = b => { let s = 0; for(let ch = 0; ch < 2; ch++) for(const x of b.getChannelData(ch)) s += x * x; return s; };
+  const g = Math.sqrt(energy(old) / energy(ir)); for(let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for(let i = 0; i < len; i++) d[i] *= g; }
+  return ir;
+}
+/** 依開關切換：殘響的空間、母帶飽和 */
+function applyEnhance(){
+  if(!ctx) return;
+  REV.buffer = ENH ? IR_NEW : IR_OLD;
+  try{ master.disconnect(); }catch(e){}
+  master.connect(ENH ? SATN : OUT);
+}
+function setEnhance(on){ ENH = !!on; try{ localStorage.setItem(ENH_STORE, ENH ? '1' : '0'); }catch(e){} applyEnhance(); }
 function updateDelayTime(){ if(delayNode) delayNode.delayTime.value = 60 / S.bpm * 0.75; }
 const outLat = () => ctx ? (ctx.outputLatency || ctx.baseLatency || 0) : 0;
 function reg(v, s, end){ v.srcs.push({s, end}); }
@@ -97,6 +149,8 @@ function makeChain(o, ts, te, v, lvl, cutoff){
   const rv = Math.min(1, o.rev + (o.texture === 'mist' ? 0.55 : 0));
   if(rv > 0.01){ const sg = ctx.createGain(); sg.gain.value = rv; out.connect(sg); sg.connect(v.out.rev); }
   if(o.dly > 0.01){ const sg = ctx.createGain(); sg.gain.value = o.dly; out.connect(sg); sg.connect(v.out.dly); }
+  const cho = ENH ? CHO[o.tone] || 0 : 0;   // 音色增強：鋪底、鍵盤類送一點合唱
+  if(cho > 0.01 && v.out.cho){ const sg = ctx.createGain(); sg.gain.value = cho; out.connect(sg); sg.connect(v.out.cho); }
   return {input, lp, dyn, end};
 }
 
@@ -155,16 +209,22 @@ function addVibrato(o, T, ts, end, span, v){
   const depth = o.texture === 'wave' ? Math.max(o.lfoD, 30) : o.lfoD;
   if(depth < 0.5 || !T.D.length) return;
   const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = o.lfoR;
-  lg.gain.setValueAtTime(0, ts); lg.gain.linearRampToValueAtTime(depth, ts + Math.min(0.4, Math.max(0.01, span)));
+  // 音色增強：長音先穩住，過一下顫音才慢慢出現（像歌手、弦樂）
+  const wait = ENH && span > 0.6 ? Math.min(0.35, span * 0.25) : 0;
+  lg.gain.setValueAtTime(0, ts + wait); lg.gain.linearRampToValueAtTime(depth, ts + wait + Math.min(wait ? 0.5 : 0.4, Math.max(0.01, span)));
   lfo.connect(lg); T.D.forEach(d => lg.connect(d)); lfo.start(ts); lfo.stop(end); reg(v, lfo, end);
 }
 
 function scheduleLine(o, t0, dur, v){
   const P = o.pts; if(P.length < 2) return;
   const ts = t0 + P[0].x * dur, te = t0 + P[P.length - 1].x * dur; if(te - ts < 0.015) return;
-  const oct = o.oct * 12, C = cutoffOf(o.size);
-  const ch = makeChain(o, ts, te, v, LVL[o.tone] * (0.15 + o.alpha * 0.85), C);
+  const oct = o.oct * 12, C = cutoffOf(o.size), w0 = P[0].w ?? 1;
+  // 音色增強的力度表情：彈得重 → 起音更硬、亮度變化更大
+  const oo = ENH && o.a < 0.15 ? {...o, a:o.a * (1.35 - 0.6 * w0)} : o, bright = ENH ? [0.4, 0.6] : [0.55, 0.45];
+  const ch = makeChain(oo, ts, te, v, LVL[o.tone] * (0.15 + o.alpha * 0.85), C);
   const T = buildTone(o.tone, o, mtof(quant(P[0].y) + oct), ts, ch.end + 0.05, ch.input, v);
+  if(ENH && (o.tone === 'pluck' || o.tone === 'bell')) T.D.forEach(d => {   // 撥弦、敲擊的瞬間音高略高，馬上落回來
+    const base = d.value; d.setValueAtTime(base + 12 * w0, ts); d.setTargetAtTime(base, ts, 0.035); });
   let last = null, lt = -1;
   for(let i = 0; i < P.length; i++){
     const p = P[i], t = t0 + p.x * dur, m = quant(p.y) + oct;
@@ -176,8 +236,8 @@ function scheduleLine(o, t0, dur, v){
     }
     // 筆觸力度 → 音量與亮度
     const w = p.w ?? 1;
-    if(i === 0){ ch.dyn.gain.setValueAtTime(dynGain(w), t); ch.lp.frequency.setValueAtTime(C * (0.55 + 0.45 * w), t); lt = t; }
-    else if(t - lt >= 0.025 || i === P.length - 1){ ch.dyn.gain.linearRampToValueAtTime(dynGain(w), t); ch.lp.frequency.linearRampToValueAtTime(C * (0.55 + 0.45 * w), t); lt = t; }
+    if(i === 0){ ch.dyn.gain.setValueAtTime(dynGain(w), t); ch.lp.frequency.setValueAtTime(C * (bright[0] + bright[1] * w), t); lt = t; }
+    else if(t - lt >= 0.025 || i === P.length - 1){ ch.dyn.gain.linearRampToValueAtTime(dynGain(w), t); ch.lp.frequency.linearRampToValueAtTime(C * (bright[0] + bright[1] * w), t); lt = t; }
   }
   addVibrato(o, T, ts, ch.end, te - ts, v);
 }
@@ -186,9 +246,9 @@ function scheduleChord(o, ts, len, v){
   const notes = chordNotes(o); if(!o.notes) notes.unshift(quant(o.y) - 12);
   const te = ts + len, oct = o.oct * 12;
   const ch = makeChain(o, ts, te, v, LVL[o.tone] * 1.1 * (0.15 + o.alpha * 0.85) / Math.sqrt(notes.length), cutoffOf(o.size));
-  const D = [];
-  for(const m of notes){
-    const T = buildTone(o.tone, o, mtof(m + oct), ts, ch.end + 0.05, ch.input, v);
+  const D = [], strum = ENH && (o.tone === 'pluck' || o.tone === 'bell') ? 0.009 : 0;   // 撥弦、電鋼琴的和弦每個音錯開幾毫秒，像真的刷弦
+  for(const [j, m] of notes.entries()){
+    const T = buildTone(o.tone, o, mtof(m + oct), ts + j * strum, ch.end + 0.05, ch.input, v);
     T.D.forEach(d => { d.value += (Math.random() - 0.5) * 8; D.push(d); });
   }
   addVibrato(o, {D}, ts, ch.end, len, v);   // 整個和弦共用一個顫音 LFO
@@ -207,6 +267,7 @@ function playDrum(o, t, v){
   const tone = (type, f1, f2, sweep, peak, dec) => { const x = ctx.createOscillator(); x.type = type;
     x.frequency.setValueAtTime(f1, t); x.frequency.exponentialRampToValueAtTime(f2, t + sweep);
     x.connect(env(peak, dec)); x.start(t); x.stop(t + dec + 0.03); reg(v, x, t + dec); };
+  if(ENH) return playDrumHD(o, t, v, bus, vv, tr, dk, env, noise, tone);
   switch(o.lane){
     case 'kick':  tone('sine', 165 * tr, 42 * tr, 0.14, 1.0 * vv, 0.42 * dk); noise(0.012, 'highpass', 3000, 0.25 * vv); break;
     case 'snare': noise(0.2 * dk, 'highpass', 1300 * tr, 0.5 * vv); tone('triangle', 200 * tr, 150 * tr, 0.1, 0.38 * vv, 0.12 * dk); break;
@@ -217,7 +278,41 @@ function playDrum(o, t, v){
     case 'tom':   tone('sine', 190 * tr, 95 * tr, 0.3, 0.8 * vv, 0.4 * dk); noise(0.02, 'bandpass', 2000, 0.1 * vv); break;
   }
 }
+/* 808 的 Hi-hat 做法：6 個頻率不成整數比的方波疊起來，經過帶通與高通，聽起來是金屬聲而不是沙沙的雜訊 */
+const METAL = [205.3, 304.4, 369.6, 522.7, 540, 800];
+/** 音色增強版的鼓 */
+function playDrumHD(o, t, v, bus, vv, tr, dk, env, noise, tone){
+  const metal = (dec, peak, f) => {
+    const sum = ctx.createGain(), bp = ctx.createBiquadFilter(), hp = ctx.createBiquadFilter();
+    sum.gain.value = 1 / 3; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 0.8; hp.type = 'highpass'; hp.frequency.value = 7000 * tr;
+    sum.connect(bp); bp.connect(hp); hp.connect(env(peak, dec));
+    for(const fq of LITE ? METAL.filter((_, j) => j % 2) : METAL){ const x = ctx.createOscillator(); x.type = 'square'; x.frequency.value = fq * 1.6 * tr;
+      x.connect(sum); x.start(t); x.stop(t + dec + 0.03); reg(v, x, t + dec); }
+  };
+  switch(o.lane){
+    case 'kick':   // 低頻本體＋敲擊瞬間的「喀」＋一點點次低音尾巴
+      tone('sine', 170 * tr, 44 * tr, 0.12, 1.0 * vv, 0.42 * dk); tone('sine', 1800 * tr, 500 * tr, 0.012, 0.32 * vv, 0.022);
+      tone('sine', 52 * tr, 46 * tr, 0.3, 0.22 * vv, 0.55 * dk); noise(0.008, 'highpass', 4000, 0.16 * vv); break;
+    case 'snare':  // 兩個鼓皮共鳴＋響線的雜訊
+      tone('triangle', 196 * tr, 165 * tr, 0.06, 0.42 * vv, 0.12 * dk); tone('triangle', 335 * tr, 290 * tr, 0.05, 0.22 * vv, 0.08 * dk);
+      noise(0.19 * dk, 'bandpass', 4200 * tr, 0.8 * vv, t, 0.7); noise(0.07 * dk, 'highpass', 1800 * tr, 0.38 * vv); break;
+    case 'clap':  [0, 0.011, 0.022].forEach(k => noise(0.018, 'bandpass', 1400 * tr, 0.55 * vv, t + k, 2));
+                  noise(0.2 * dk, 'bandpass', 1200 * tr, 0.4 * vv, t + 0.03, 1.5); break;
+    case 'hat':   metal(0.05 * dk, 0.9 * vv, 10000); noise(0.03 * dk, 'highpass', 9000 * tr, 0.12 * vv); break;
+    case 'ohat':  metal(0.38 * dk, 0.68 * vv, 9000); noise(0.3 * dk, 'highpass', 8000 * tr, 0.09 * vv); break;
+    case 'tom':   tone('sine', 195 * tr, 98 * tr, 0.28, 0.8 * vv, 0.42 * dk); tone('sine', 300 * tr, 150 * tr, 0.2, 0.15 * vv, 0.2 * dk);
+                  noise(0.02, 'bandpass', 2000, 0.1 * vv); break;
+  }
+}
+/* 人性化：每次演奏，時間和力度都有一點點不同（鼓的 Hi-hat 最明顯，大鼓幾乎不動），試聽時不加 */
+const JIT = {kick:0.002, snare:0.004, clap:0.004, tom:0.004, hat:0.006, ohat:0.005};
+const jitter = s => (Math.random() + Math.random() - 1) * s;   // 三角分布，偏向 0
 function scheduleObj(o, t0, dur, v){
+  if(ENH && v !== LOOSE){
+    if(o.type === 'drop'){ playDrum({...o, alpha:clamp(o.alpha * (1 + jitter(0.09)), 0.05, 1)}, t0 + o.x * dur + jitter(JIT[o.lane] || 0.004), v); return; }
+    t0 += jitter(o.type === 'chord' ? 0.005 : 0.006);
+    o = {...o, alpha:clamp(o.alpha * (1 + jitter(0.06)), 0.05, 1)};
+  }
   if(o.type === 'line') scheduleLine(o, t0, dur, v);
   else if(o.type === 'drop') playDrum(o, t0 + o.x * dur, v);
   else scheduleChord(o, t0 + o.x * dur, o.len * dur, v);
@@ -233,10 +328,10 @@ function auditionObj(o, pad){
    這樣「播完這一圈再停」時可以把已經排好的下一圈整個取消。 */
 const voices = new Map();
 function makeOut(vol, parent){
-  const o = {dry:ctx.createGain(), rev:ctx.createGain(), dly:ctx.createGain()};
+  const o = {dry:ctx.createGain(), rev:ctx.createGain(), dly:ctx.createGain(), cho:ctx.createGain()};
   for(const k in o) o[k].gain.value = vol;
-  if(parent){ o.dry.connect(parent.dry); o.rev.connect(parent.rev); o.dly.connect(parent.dly); }
-  else { o.dry.connect(master); o.rev.connect(revIn); o.dly.connect(dlyIn); }
+  if(parent){ for(const k in o) o[k].connect(parent[k]); }
+  else { o.dry.connect(master); o.rev.connect(revIn); o.dly.connect(dlyIn); o.cho.connect(choIn); }
   return o;
 }
 const disconnectOut = o => { for(const k in o) o[k].disconnect(); };
