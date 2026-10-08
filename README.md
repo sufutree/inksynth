@@ -2,7 +2,7 @@
 
 用「畫畫」的方式做音樂的網頁音效板。在格子裡用畫筆畫出旋律和節奏，再用鍵盤即時演奏、疊加成一首曲子。
 
-👉 **線上試玩：<https://inksynth-alpha.vercel.app/>**
+👉 **線上試玩：<https://inksynth-pad.vercel.app/>**
 
 不需要安裝任何東西，打開網頁就能玩，所有聲音都由瀏覽器的 Web Audio API 即時合成。
 
