@@ -195,7 +195,7 @@ function recDraw(o, states = S.pads.map((_, i) => padState(i))){
   if(o.layout === 'board') recBoard(c, states, 50, 150, RW - 100, RH - 230);
   else if(o.layout === 'overview') recOverview(c, states, 60, 150, RW - 120, RH - 230);
   else { const bh = recBoard(c, states, 120, 140, RW - 240, 0); recOverview(c, states, 60, 140 + bh + 22, RW - 120, RH - 140 - bh - 22 - 70); }
-  c.textAlign = 'right'; c.textBaseline = 'middle'; c.font = `500 20px ${FONT}`; c.fillStyle = 'rgba(255,255,255,.28)'; c.fillText('inksynth-alpha.vercel.app', RW - 60, RH - 34);
+  c.textAlign = 'right'; c.textBaseline = 'middle'; c.font = `500 20px ${FONT}`; c.fillStyle = 'rgba(255,255,255,.28)'; c.fillText('inksynth-pad.vercel.app', RW - 60, RH - 34);
 }
 /** 疊合總覽：用錄影專用的那一份，大小固定，跟網頁上的畫面無關 */
 function recOverview(c, states, x, y, w, h){
