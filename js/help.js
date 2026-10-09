@@ -13,7 +13,7 @@ function helpChapter(ch){
   $('#helpBody').scrollTop = 0;
 }
 function openHelp(ch){
-  helpChapter(ch || (S.editing !== null ? 'editor' : S.view === 'overview' ? 'overview' : 'start'));
+  helpChapter(ch || (S.editing !== null ? (S.tab === 'detail' ? 'detail' : 'editor') : S.view === 'overview' ? 'overview' : 'start'));
   $('#helpModal').hidden = false; dismissHelpTip();
 }
 function closeHelp(){ $('#helpModal').hidden = true; }

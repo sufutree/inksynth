@@ -56,7 +56,7 @@ function initAudio(){
   }
   applyEnhance();
 
-  SAT = curve(4);
+  SAT = grainCurve();
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
   { const d = noiseBuf.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
   crackleBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -73,8 +73,14 @@ function initAudio(){
   { const N = 24, re = new Float32Array(N), im = new Float32Array(N);
     [[1,1],[2,.75],[3,.5],[4,.45],[6,.3],[8,.25],[10,.12],[12,.1],[16,.06]].forEach(([h, a]) => im[h] = a);
     ORGAN = ctx.createPeriodicWave(re, im); }
-  LOOSE.out = {dry:master, rev:revIn, dly:dlyIn, cho:choIn};
+  LOOSE.out = {dry:master, rev:revIn, dly:dlyIn, cho:choIn}; LOOSE.bus = null;
 }
+/** 顆粒的飽和：溫和的磁帶感（tanh），小音量時增益剛好是 1、不會改變音量；
+    搭配前級 ×GRAIN_IN（波形整形器只吃 −1～1，和弦好幾個音疊起來會超過）、後級除回來。
+    舊版是 5 倍增益的硬飽和，和弦會被壓扁、破音，聽起來雜訊很重 */
+const GRAIN_IN = 0.25, GRAIN_K = 1.4;
+function grainCurve(){ const n = 2048, c = new Float32Array(n);
+  for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; c[i] = Math.tanh(GRAIN_K * x) / GRAIN_K; } return c; }
 /** 母帶飽和：非常輕微的軟削波，讓聲音比較溫暖、整體一點（音量小的地方幾乎不變） */
 function tapeCurve(){ const n = 4096, c = new Float32Array(n), k = 1.6, norm = Math.tanh(k), slope = 0.7 + 0.3 * k / norm;   // 除以 slope：小音量時增益剛好是 1，不會整體變大聲
   for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; c[i] = (0.7 * x + 0.3 * Math.tanh(k * x) / norm) / slope; } return c; }
@@ -110,6 +116,28 @@ function setEnhance(on){ ENH = !!on; try{ localStorage.setItem(ENH_STORE, ENH ? 
 function updateDelayTime(){ if(delayNode) delayNode.delayTime.value = 60 / S.bpm * 0.75; }
 const outLat = () => ctx ? (ctx.outputLatency || ctx.baseLatency || 0) : 0;
 function reg(v, s, end){ v.srcs.push({s, end}); }
+/* 播完的音要從音訊圖上拔掉：一個音的濾波、音量、聲像、送出節點如果一直接著，
+   就算已經沒聲音，每一格音訊還是要把它們算一遍；快速的循環（例如 172 BPM 的十六分音符）
+   一圈下來會累積幾百個，疊幾格就超載、聲音卡卡的。這裡記下每個音的「出口」節點，結束後斷開。 */
+const DEAD = [];
+const retire = (end, nodes) => DEAD.push({end, nodes});
+/** 共用匯流排：同一圈裡聲像、殘響、延遲、合唱設定相同的音，共用一組聲像器與效果送出，
+    不用每個音各建一套（快速的序列一秒十幾個音，各建一套很吃效能） */
+function busFor(v, pan, rv, dl, ch){
+  const key = pan + '|' + rv + '|' + dl + '|' + ch, m = v.bus || (v.bus = new Map());
+  let b = m.get(key); if(b) return b;
+  b = ctx.createGain(); let out = b;
+  if(ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = pan; b.connect(pn); out = pn; }
+  out.connect(v.out.dry);
+  for(const [amt, dest] of [[rv, v.out.rev], [dl, v.out.dly], [ch, v.out.cho]])
+    if(amt > 0.01 && dest){ const sg = ctx.createGain(); sg.gain.value = amt; out.connect(sg); sg.connect(dest); }
+  m.set(key, b); return b;
+}
+function sweepDead(now){
+  let k = 0;
+  for(const d of DEAD){ if(d.end < now) d.nodes.forEach(n => { try{ n.disconnect(); }catch(e){} }); else DEAD[k++] = d; }
+  DEAD.length = k;
+}
 
 const LVL = {sine:.42, triangle:.44, sawtooth:.32, square:.24, pulse:.28, supersaw:.30, organ:.26, bell:.34,
              pluck:.46, wind:.85, sub:.40, choir:.30};
@@ -124,7 +152,8 @@ function makeChain(o, ts, te, v, lvl, cutoff){
   if(o.fenv > 0.005){ lp.detune.setValueAtTime(o.fenv * 4800, ts); lp.detune.setTargetAtTime(0, ts, Math.max(0.02, Dd / 3)); }
   if(o.drive > 0.01){ const ws = ctx.createWaveShaper(); ws.curve = driveCurve(o.drive); ws.oversample = '2x';
     const comp = ctx.createGain(); comp.gain.value = 1 / (1 + o.drive * 0.6); node.connect(ws); ws.connect(comp); node = comp; }
-  if(o.texture === 'grain'){ const sh = ctx.createWaveShaper(); sh.curve = SAT; node.connect(sh); node = sh; }
+  if(o.texture === 'grain'){ const pre = ctx.createGain(), sh = ctx.createWaveShaper(), post = ctx.createGain();
+    pre.gain.value = GRAIN_IN; sh.curve = SAT; post.gain.value = 1 / GRAIN_IN; node.connect(pre); pre.connect(sh); sh.connect(post); node = post; }
   const env = ctx.createGain(), g = env.gain; node.connect(env);
   g.setValueAtTime(0, ts);
   if(te <= ts + A){ g.linearRampToValueAtTime(lvl * (te - ts) / A, te); g.linearRampToValueAtTime(0, end); }
@@ -134,7 +163,7 @@ function makeChain(o, ts, te, v, lvl, cutoff){
     g.linearRampToValueAtTime(vD, tD); if(te > tD) g.setValueAtTime(vD, te); g.linearRampToValueAtTime(0, end);
   }
   if(o.texture === 'grain'){
-    const cs = ctx.createBufferSource(), cg = ctx.createGain(); cs.buffer = crackleBuf; cs.loop = true; cg.gain.value = 0.5 * lvl / 0.2;
+    const cs = ctx.createBufferSource(), cg = ctx.createGain(); cs.buffer = crackleBuf; cs.loop = true; cg.gain.value = 0.16 * lvl / 0.2;   // 黑膠劈啪聲：舊版 0.5，太吵
     cs.connect(cg); cg.connect(env); cs.start(ts, Math.random() * 1.5); cs.stop(end); reg(v, cs, end);
   }
   const dyn = ctx.createGain(); env.connect(dyn); let tail = dyn;
@@ -143,14 +172,10 @@ function makeChain(o, ts, te, v, lvl, cutoff){
     tr.gain.value = 0.5; l.type = 'square'; l.frequency.value = S.bpm / 60 * 4; lg.gain.value = 0.5;
     l.connect(lg); lg.connect(tr.gain); dyn.connect(tr); tail = tr; l.start(ts); l.stop(end); reg(v, l, end);
   }
-  let out = tail;
-  if(ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = o.pan; tail.connect(pn); out = pn; }
-  out.connect(v.out.dry);
   const rv = Math.min(1, o.rev + (o.texture === 'mist' ? 0.55 : 0));
-  if(rv > 0.01){ const sg = ctx.createGain(); sg.gain.value = rv; out.connect(sg); sg.connect(v.out.rev); }
-  if(o.dly > 0.01){ const sg = ctx.createGain(); sg.gain.value = o.dly; out.connect(sg); sg.connect(v.out.dly); }
   const cho = ENH ? CHO[o.tone] || 0 : 0;   // 音色增強：鋪底、鍵盤類送一點合唱
-  if(cho > 0.01 && v.out.cho){ const sg = ctx.createGain(); sg.gain.value = cho; out.connect(sg); sg.connect(v.out.cho); }
+  tail.connect(busFor(v, o.pan, rv, o.dly, cho));
+  retire(end + 0.3, [tail]);
   return {input, lp, dyn, end};
 }
 
@@ -194,11 +219,13 @@ function buildTone(tone, o, f0, ts, end, dest, v){
     }
     case 'sub': osc('sine', 1); osc('sine', 0.5, 0, 0.8); osc('triangle', 1, 0, 0.2); break;
     case 'choir': {
-      const mix = ctx.createGain();
-      for(const [fq, q, gn] of [[730, 7, 1], [1090, 8, 0.55], [2440, 9, 0.3]]){
-        const bp = ctx.createBiquadFilter(), gg = ctx.createGain(); bp.type = 'bandpass'; bp.frequency.value = fq; bp.Q.value = q;
-        gg.gain.value = gn * 2.6; mix.connect(bp); bp.connect(gg); gg.connect(dest);
-      }
+      // 共振峰的頻率是固定的、跟音高無關，所以同一個和弦的每個音共用同一組濾波器（聲音一樣，省下大量濾波器）
+      let mix = dest.__formant;
+      if(!mix){ mix = dest.__formant = ctx.createGain();
+        for(const [fq, q, gn] of [[730, 7, 1], [1090, 8, 0.55], [2440, 9, 0.3]]){
+          const bp = ctx.createBiquadFilter(), gg = ctx.createGain(); bp.type = 'bandpass'; bp.frequency.value = fq; bp.Q.value = q;
+          gg.gain.value = gn * 2.6; mix.connect(bp); bp.connect(gg); gg.connect(dest);
+        } }
       osc('sawtooth', 1, -u, 1, mix); osc('sawtooth', 1, 0, 1, mix); osc('sawtooth', 1, u, 1, mix);
       break;
     }
@@ -255,12 +282,10 @@ function scheduleChord(o, ts, len, v){
 }
 function playDrum(o, t, v){
   const vv = 0.35 + o.alpha * 0.65, tr = Math.pow(2, (o.tune || 0) / 12), dk = o.dec || 1;
-  const bus = ctx.createGain(); let out = bus;
-  if(ctx.createStereoPanner){ const pn = ctx.createStereoPanner(); pn.pan.value = o.pan || 0; bus.connect(pn); out = pn; }
-  out.connect(v.out.dry);
-  if(o.rev > 0.01){ const sg = ctx.createGain(); sg.gain.value = o.rev; out.connect(sg); sg.connect(v.out.rev); }
+  const bus = busFor(v, o.pan || 0, o.rev > 0.01 ? o.rev : 0, 0, 0), exits = [];
+  retire(t + 0.6 * dk + 0.5, exits);   // 最長的鼓聲（大鼓尾巴、開放鈸）大約 0.55 × 衰減倍率
   const env = (peak, dec, at = t) => { const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, at);
-    g.gain.exponentialRampToValueAtTime(peak, at + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, at + dec); g.connect(bus); return g; };
+    g.gain.exponentialRampToValueAtTime(peak, at + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, at + dec); g.connect(bus); exits.push(g); return g; };
   const noise = (dec, type, f, peak, at = t, q = 1) => { const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter();
     s.buffer = noiseBuf; fl.type = type; fl.frequency.value = f; fl.Q.value = q; s.connect(fl); fl.connect(env(peak, dec, at));
     s.start(at, Math.random() * 1.5); s.stop(at + dec + 0.02); reg(v, s, at + dec); };
@@ -406,7 +431,8 @@ function setMasterVolume(x){ MIX.master = clamp(x, 0, 1.5); if(master) master.ga
   try{ localStorage.setItem(MIX_STORE, JSON.stringify({master:MIX.master})); }catch(e){} }
 function stopAll(){ for(const id of [...voices.keys()]) stopPad(id, 0.08); }
 let tick = 0;
-setInterval(() => {
+/** 排程迴圈（每 25 ms）：補排下一圈、把接下來要響的音建好、清掉播完的 */
+function audioTick(){
   if(!ctx) return; const now = ctx.currentTime;
   LITE = voices.size >= 6;   // 同時播很多格時降低音色的層數，減輕負擔
   for(const [id, v] of voices){
@@ -414,8 +440,10 @@ setInterval(() => {
     else if(now > v.endAt + 3){ for(const ps of v.passes) disconnectOut(ps.out); disconnectOut(v.out); voices.delete(id); onVoiceChange(id); continue; }
     for(const ps of v.passes){ pumpPass(v, ps, now + LOOKAHEAD); if(tick % 40 === 0) ps.srcs = ps.srcs.filter(x => x.end > now); }
   }
+  if(tick % 4 === 0) sweepDead(now);
   if(tick++ % 40 === 0) LOOSE.srcs = LOOSE.srcs.filter(x => x.end > now);
-}, 25);
+}
+setInterval(audioTick, 25);
 /** 回傳 {state:'armed'|'playing'|null, prog, el, stopping} */
 function padState(id){
   const v = voices.get(id); if(!v || !ctx) return {state:null};
@@ -426,6 +454,7 @@ function padState(id){
 }
 /** 演奏模式的觸發：單次＝從頭播一次；循環＝再按一次就播完這圈停止。shift = 立即停止 */
 function trigger(i, shift = false){
+  if(S.mode === 'edit') return;   // 編輯模式不演奏（編輯器的試聽走 startPad，不經過這裡）
   const p = S.pads[i], v = voices.get(i), st = padState(i).state;
   if(shift){ if(v) stopPad(i, 0.03); return; }
   if(!p.objects.length){ toast(`「${keyLabel(p.key)}」是空白的，切到 ✎ 編輯 來畫`); return; }

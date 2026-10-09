@@ -375,7 +375,10 @@ function build(C){
     const opt = {...((C.O || {})[role] || {}), ...ov};
     const [props, objs] = ROLES[role](opt, ov.T || T[role] || T[LAYOUT[key]], ov.name || N[role] || N[LAYOUT[key]], key);   // 沒指定就沿用這個位置原本的音色
     const pad = pads[PAD_KEYS.indexOf(key)];
-    Object.assign(pad, props, {objects:[objs].flat(9).filter(Boolean).map(normalizeObj)});
+    /* 管樂的氣音：音色設定裡有 breath 的線，在下面墊一條同樣路徑、比較輕的風聲（吹氣感），本體仍是有音高的音色 */
+    const list = [objs].flat(9).filter(Boolean), breaths = [];
+    for(const o of list) if(o.breath != null){ if(o.type === 'line') breaths.push({...o, tone:'wind', texture:'smooth', size:24, alpha:o.breath, lfoD:0, breath:undefined}); delete o.breath; }
+    Object.assign(pad, props, {objects:[...breaths, ...list].map(o => { delete o.breath; return normalizeObj(o); })});
     if(ov.vol != null) pad.vol = ov.vol;
     if(!pad.align) pad.align = 'global';
   }

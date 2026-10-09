@@ -111,7 +111,11 @@ lofi:{name:'憂鬱 Lo-fi', desc:'A 小調・86 BPM・Fmaj9–Em7(11)–Dm11–Am
   N:{groove:'慵懶搖擺', groove4:'搖擺＋過門', hats:'Swing Hat', perc:'木魚與拍手', half:'半速搖擺', break:'只剩大鼓', build:'小鼓漸強', impact:'低沉重擊',
     pad:'三角波鋪底', stabs:'Rhodes 切分', arp:'吉他分解', comp:'Rhodes 和弦', strings8:'磁帶弦樂 8 小節', choir:'人聲 Pad', offbeat:'風琴反拍', alt:'第二進行',
     strum:'吉他刷弦', shimmer:'窗外微光', themeB:'三角波副旋律', hook:'鐘琴短句', counter:'低音對位', seq:'電鋼序列', run:'鋼琴即興', motif:'風鈴動機',
-    callResp:'對答', glide:'滑音口哨', bass:'Upright 低音', texture:'黑膠沙沙聲', sweep:'雨聲掃過', stutter:'切片 Rhodes', outro:'結束 Am9'}},
+    callResp:'對答', glide:'滑音口哨', bass:'Upright 低音', texture:'黑膠沙沙聲', sweep:'雨聲掃過', stutter:'切片 Rhodes', outro:'結束 Am9'},
+  /* 顆粒效果改成溫和的飽和之後：和弦類不再被壓扁（變大聲）、撥弦與單音類的尾音不再被放大（變小聲），
+     黑膠劈啪聲也降低了；這裡用格子音量把各格補回原本的平衡 */
+  pads:{KeyQ:{vol:0.44}, KeyW:{vol:0.42}, KeyE:{vol:1}, KeyR:{vol:0.41}, KeyU:{vol:0.35}, KeyI:{vol:0.37},
+    KeyS:{vol:0.89}, KeyJ:{vol:0.69}, Slash:{vol:0.5}, KeyN:{vol:1}}},
 
 /* ============================================================ */
 pop:{name:'陽光流行', desc:'C 大調・118 BPM・Cadd9–G/B–Am7–Fadd9（I–V–vi–IV，低音一路往下走）', root:0, scale:'major', bpm:118, seed:102,
@@ -150,11 +154,11 @@ wafu:{name:'日式和風', desc:'D 都節音階・84 BPM・太鼓、箏、三味
     strings8:['sawtooth', 'soft', {size:8, alpha:0.42, uni:12, a:0.6, r:1.4, rev:0.55, lfoD:6, lfoR:5}], choir:['choir', 'swell', {size:14, alpha:0.45, rev:0.6, texture:'mist'}],
     offbeat:['pluck', 'pluck', {size:16, alpha:0.5, d:0.25, s:0.05, r:0.25, rev:0.3, pan:0.3}], strum:['pluck', 'pluck', {size:13, alpha:0.6, d:1, s:0.2, r:1.8, rev:0.5}],
     shimmer:['bell', 'swell', {size:22, alpha:0.4, rev:0.7, texture:'mist'}],
-    themeA8:['wind', 'soft', {size:20, alpha:0.75, a:0.08, glide:0.12, rev:0.5, q:5, lfoD:12, lfoR:4.5}], themeB:['triangle', 'soft', {size:18, alpha:0.65, a:0.03, glide:0.1, rev:0.45, texture:'wave'}],
+    themeA8:['triangle', 'soft', {size:17, alpha:0.72, a:0.07, glide:0.12, rev:0.5, lfoD:12, lfoR:4.5, breath:0.45}], themeB:['triangle', 'soft', {size:18, alpha:0.65, a:0.03, glide:0.1, rev:0.45, texture:'wave'}],
     hook:['pluck', 'pluck', {size:16, alpha:0.55, d:0.3, s:0.1, r:0.3, rev:0.3, drive:0.15}], counter:['pluck', 'pluck', {size:11, alpha:0.55, d:0.9, s:0.2, r:1.2, rev:0.45}],
     seq:['pluck', 'pluck', {size:13, alpha:0.48, d:0.4, s:0.1, r:0.5, rev:0.4, dly:0.2}], run:['pluck', 'pluck', {size:14, alpha:0.55, d:0.5, s:0.1, r:0.8, rev:0.5}],
-    harmony8:['wind', 'soft', {size:18, alpha:0.55, a:0.08, glide:0.1, rev:0.5, q:5, pan:0.3}], motif:['bell', 'pluck', {size:20, alpha:0.45, d:1, s:0.1, r:2, rev:0.6}],
-    callResp:[['wind', 'soft', {size:20, alpha:0.7, a:0.06, glide:0.1, rev:0.5, q:5, pan:-0.3}], ['triangle', 'soft', {size:18, alpha:0.6, a:0.03, glide:0.08, rev:0.45, pan:0.3, texture:'wave'}]],
+    harmony8:['triangle', 'soft', {size:15, alpha:0.55, a:0.08, glide:0.1, rev:0.5, lfoD:10, lfoR:4.5, pan:0.3, breath:0.35}], motif:['bell', 'pluck', {size:20, alpha:0.45, d:1, s:0.1, r:2, rev:0.6}],
+    callResp:[['triangle', 'soft', {size:17, alpha:0.7, a:0.06, glide:0.1, rev:0.5, lfoD:12, lfoR:4.5, pan:-0.3, breath:0.45}], ['triangle', 'soft', {size:18, alpha:0.6, a:0.03, glide:0.08, rev:0.45, pan:0.3, texture:'wave'}]],
     glide:['sawtooth', 'soft', {size:8, alpha:0.55, glide:0.22, rev:0.5, lfoD:14, lfoR:5, a:0.1}],
     bass:['sub', 'hard', {size:12, alpha:0.8, r:0.3, rev:0.1}], bass2:['pluck', 'pluck', {size:7, alpha:0.75, d:0.4, s:0.3, r:0.2, rev:0.1}],
     riser:['wind', 'swell', {size:22, alpha:0.6, rev:0.55, texture:'wave'}], down:['bell', 'hard', {size:16, alpha:0.55, rev:0.5, glide:0.2}],
@@ -164,7 +168,7 @@ wafu:{name:'日式和風', desc:'D 都節音階・84 BPM・太鼓、箏、三味
     pad:'笙 Shō', stabs:'三味線 撥', arp:'箏 分解', comp:'箏 和音', strings8:'弦樂 8 小節', choir:'人聲', offbeat:'三味線 反拍', strum:'箏 刮奏', shimmer:'風鈴',
     themeB:'篠笛', hook:'三味線 Riff', counter:'箏 對位', seq:'箏 序列', run:'箏 急奏', harmony8:'尺八和聲 8 小節', motif:'鈴', callResp:'尺八與篠笛',
     glide:'胡弓 滑音', bass:'低音', bass2:'撥奏低音', riser:'風起', texture:'竹林風聲', sweep:'浪', stutter:'三味線 斷奏', drone:'笙 持續音', outro:'結束 D'},
-  pads:{KeyI:{role:'tremolo', name:'箏 輪指', T:['pluck', 'pluck', {size:13, alpha:0.5, d:0.2, s:0.1, r:0.2, rev:0.4}], rate:1 / 6},
+  pads:{KeyL:{vol:0.5}, KeyI:{role:'tremolo', name:'箏 輪指', T:['pluck', 'pluck', {size:13, alpha:0.5, d:0.2, s:0.1, r:0.2, rev:0.4}], rate:1 / 6},
     KeyA:{role:'ornament', name:'尺八 主旋律 8 小節', theme:true, bars:8}, KeyS:{role:'ornament', name:'篠笛', T:['triangle', 'soft', {size:18, alpha:0.65, a:0.03, glide:0.1, rev:0.45, texture:'wave'}], m:{center:7}}}},
 
 /* ============================================================ */
@@ -309,7 +313,9 @@ synthwave:{name:'Synthwave 夕陽公路', desc:'E 小調・104 BPM・Em(add9)–
     impact:'閘門重擊', pad:'超鋸齒進行', stabs:'合成器切分', arp:'十六分琶音', comp:'風琴和弦', strings8:'合成弦樂 8 小節', choir:'人聲 Pad', offbeat:'方波反拍',
     alt:'磁帶感進行', strum:'電吉他刷弦', shimmer:'夕陽泛光', themeB:'方波副歌', hook:'超鋸齒 Hook', counter:'三角波對位', seq:'脈衝序列', run:'失真獨奏',
     harmony8:'副歌和聲', motif:'數位鐘聲', callResp:'雙合成器對答', bass:'八分音低音', bass2:'律動低音', riser:'上升掃頻', down:'下墜掃頻', texture:'夜風',
-    sweep:'磁帶噪音', stutter:'切片和弦', drone:'鋸齒持續音', outro:'結束 Em(add9)'}},
+    sweep:'磁帶噪音', stutter:'切片和弦', drone:'鋸齒持續音', outro:'結束 Em(add9)'},
+  /* 顆粒效果改溫和後，用格子音量補回原本的平衡 */
+  pads:{KeyI:{vol:0.37}, KeyM:{vol:1.2}}},
 
 /* ============================================================ */
 citypop:{name:'City Pop 午夜霓虹', desc:'B♭ 大調・112 BPM・E♭maj9(♯11)–Dm7(11)–Cm9–F13sus4，電鋼琴、Slap 低音與銅管', root:10, scale:'major', bpm:112, seed:111, flats:true,
@@ -339,7 +345,9 @@ citypop:{name:'City Pop 午夜霓虹', desc:'B♭ 大調・112 BPM・E♭maj9(�
   N:{groove:'都會律動', groove4:'都會律動＋過門', hats:'細碎 Hat', perc:'拍手與通鼓', half:'慢搖半拍', break:'Breakdown', build:'小鼓漸強', impact:'銅管重擊', ending:'結尾 Hit',
     pad:'電鋼琴進行', stabs:'銅管切分', arp:'電鋼琶音', comp:'Rhodes 和弦', strings8:'弦樂鋪底 8 小節', choir:'和聲 Pad', offbeat:'吉他切音', alt:'副歌進行',
     strum:'吉他刷弦', shimmer:'霓虹泛光', themeB:'副歌', hook:'Hook 樂句', seq:'鐘琴序列', run:'吉他獨奏', motif:'鐘聲動機', callResp:'銅管對答', glide:'滑音合成器',
-    bass:'Slap 低音', bass2:'放克低音', texture:'城市夜色', sweep:'雨聲掃過', stutter:'切片風琴', drone:'持續音', outro:'結束 B♭6/9'}},
+    bass:'Slap 低音', bass2:'放克低音', texture:'城市夜色', sweep:'雨聲掃過', stutter:'切片風琴', drone:'持續音', outro:'結束 B♭6/9'},
+  /* 顆粒效果改溫和後，用格子音量補回原本的平衡 */
+  pads:{KeyN:{vol:1.1}}},
 
 /* ============================================================ */
 liquid:{name:'Liquid DnB 雨夜', desc:'G 多利安・172 BPM・Gm11–B♭maj9–F6/9–C6/9，碎拍、柔和 Pad、Reese 低音與鐘聲', root:7, scale:'dorian', bpm:172, seed:112, flats:true,
@@ -347,7 +355,7 @@ liquid:{name:'Liquid DnB 雨夜', desc:'G 多利安・172 BPM・Gm11–B♭maj9�
   kit:KIT.dnb, rh:{rhyA:[[[0, 2], [2, 1], [3, 1]], [[0, 1], [1, 1], [2, 2]], [[0, 1.5], [1.5, 0.5], [2, 2]], [[0, 4]]],
     rhyB:[[[0, 1], [1, 0.5], [1.5, 0.5], [2, 2]], [[0, 3], [3, 1]], [[0, 0.5], [0.5, 0.5], [1, 1], [2, 1], [3, 1]], [[0, 4]]],
     bass:[[0, 1.5, 'r'], [1.75, 0.75, 'r'], [2.5, 1.5, '5']], bassB:[[0, 0.75, 'r'], [0.75, 0.75, 'o'], [1.5, 1, 'r'], [2.5, 0.5, '5'], [3, 1, 'a']],
-    stab:[[0, 1], [1.5, 0.5], [2.5, 1]], comp:[[0, 1.5], [1.5, 1], [2.5, 1.5]], hook:RH_SLOW.hook, arpStep:0.25, seqStep:0.25},
+    stab:[[0, 1], [1.5, 0.5], [2.5, 1]], comp:[[0, 1.5], [1.5, 1], [2.5, 1.5]], hook:RH_SLOW.hook, arpStep:0.25, seqStep:0.5},
   T:{pad:['choir', 'swell', {size:16, alpha:0.55, rev:0.6, a:0.6, texture:'mist'}], stabs:['bell', 'pluck', {size:12, alpha:0.5, d:0.6, s:0.2, r:0.8, rev:0.45}],
     arp:['pluck', 'pluck', {size:15, alpha:0.5, rev:0.4, dly:0.3, pan:0.3}], comp:['bell', 'soft', {size:10, alpha:0.5, d:1.5, s:0.3, r:1.5, rev:0.45, a:0.005, lfoD:5}],
     strings8:['supersaw', 'swell', {size:9, alpha:0.45, uni:18, rev:0.6, texture:'mist'}], choir:['choir', 'soft', {size:18, alpha:0.55, rev:0.65}],
@@ -359,7 +367,7 @@ liquid:{name:'Liquid DnB 雨夜', desc:'G 多利安・172 BPM・Gm11–B♭maj9�
     harmony8:['sine', 'soft', {size:16, alpha:0.5, a:0.06, rev:0.55, pan:-0.3, texture:'wave'}], motif:['bell', 'pluck', {size:18, alpha:0.5, d:0.9, s:0.1, r:1.8, rev:0.6, dly:0.3}],
     callResp:[['bell', 'pluck', {size:14, alpha:0.55, rev:0.5, pan:-0.35}], ['choir', 'soft', {size:16, alpha:0.55, rev:0.55, pan:0.35, a:0.05}]],
     glide:['sine', 'soft', {size:22, alpha:0.65, glide:0.22, rev:0.6, dly:0.3, lfoD:14, lfoR:4.5, texture:'wave'}],
-    bass:['supersaw', 'soft', {size:5, alpha:0.7, a:0.03, uni:22, drive:0.35, rev:0.05}], bass2:['sub', 'hard', {size:12, alpha:0.85, rev:0}], sub:['sine', 'soft', {size:18, alpha:0.8, a:0.05, rev:0}],
+    bass:['sawtooth', 'soft', {size:5, alpha:0.62, a:0.03, uni:18, drive:0.2, rev:0.05}], bass2:['sub', 'hard', {size:12, alpha:0.85, rev:0}], sub:['sine', 'soft', {size:18, alpha:0.8, a:0.05, rev:0}],
     riser:['wind', 'swell', {size:22, alpha:0.6, rev:0.55, texture:'wave'}], down:['sine', 'hard', {size:18, alpha:0.6, rev:0.5, glide:0.2, dly:0.3}],
     texture:['wind', 'swell', {size:28, alpha:0.55, rev:0.65, texture:'grain', glide:0.3}], sweep:['wind', 'swell', {size:30, alpha:0.6, rev:0.45, glide:0.3, texture:'mist'}],
     stutter:['choir', 'hard', {size:16, alpha:0.55, texture:'dash', rev:0.4}], drone:['sine', 'swell', {size:24, alpha:0.45, rev:0.55, lfoD:5, lfoR:0.25, texture:'mist'}],
@@ -367,7 +375,8 @@ liquid:{name:'Liquid DnB 雨夜', desc:'G 多利安・172 BPM・Gm11–B♭maj9�
   N:{groove:'碎拍', groove4:'碎拍＋過門', hats:'十六分 Hat', perc:'鬼音小鼓', half:'半速律動', break:'雨聲間奏', build:'小鼓滾奏', fill:'碎拍過門', impact:'落雷',
     pad:'人聲進行', stabs:'鐘聲切分', arp:'撥弦琶音', comp:'電鋼琴', strings8:'弦樂雨幕 8 小節', choir:'人聲「啊」', offbeat:'風琴反拍', strum:'吉他刷弦',
     shimmer:'雨滴泛音', themeB:'人聲副題', hook:'鐘聲 Hook', seq:'撥弦序列', run:'方波獨奏', motif:'水滴鐘聲', callResp:'鐘聲與人聲對答', bass:'Reese 低音',
-    bass2:'次低音律動', sub:'深沉次低音', riser:'雨勢漸強', texture:'雨聲', sweep:'風掃過', stutter:'斷續人聲', drone:'持續音', outro:'結束 Gm9'}},
+    bass2:'次低音律動', sub:'深沉次低音', riser:'雨勢漸強', texture:'雨聲', sweep:'風掃過', stutter:'斷續人聲', drone:'持續音', outro:'結束 Gm9'},
+  pads:{KeyZ:{vol:0.5}, KeyN:{vol:1.2}}},
 
 /* ============================================================ */
 egypt:{name:'埃及沙漠', desc:'D 希賈茲（阿拉伯）・104 BPM・D–Cm(add9)–E♭–D，手鼓、烏德琴、卡農琴、蘆笛與弦樂團', root:2, scale:'hijaz', bpm:104, seed:113, flats:true,
@@ -383,11 +392,11 @@ egypt:{name:'埃及沙漠', desc:'D 希賈茲（阿拉伯）・104 BPM・D–Cm(
     strings8:['sawtooth', 'soft', {size:9, alpha:0.5, uni:16, a:0.4, r:1.2, rev:0.5, lfoD:10, lfoR:5.5}], choir:['choir', 'soft', {size:15, alpha:0.5, rev:0.55, a:0.4}],
     offbeat:['pluck', 'pluck', {size:16, alpha:0.45, d:0.25, s:0.05, r:0.3, rev:0.35, pan:0.3}], strum:['pluck', 'pluck', {size:10, alpha:0.6, d:0.7, s:0.2, r:1, rev:0.4}],
     shimmer:['sawtooth', 'swell', {size:7, alpha:0.35, uni:20, rev:0.6, lfoD:8, lfoR:5, texture:'mist'}],
-    themeA8:['sawtooth', 'soft', {size:10, alpha:0.7, uni:18, a:0.04, glide:0.1, rev:0.45, lfoD:14, lfoR:5.5}], themeB:['wind', 'soft', {size:20, alpha:0.75, a:0.06, glide:0.12, rev:0.5, q:5, lfoD:10, lfoR:5}],
+    themeA8:['sawtooth', 'soft', {size:10, alpha:0.7, uni:18, a:0.04, glide:0.1, rev:0.45, lfoD:14, lfoR:5.5}], themeB:['triangle', 'soft', {size:14, alpha:0.75, a:0.08, glide:0.12, rev:0.5, lfoD:10, lfoR:5, breath:0.5}],
     hook:['square', 'hard', {size:14, alpha:0.55, drive:0.45, glide:0.04, rev:0.3, lfoD:8, lfoR:6}], counter:['pluck', 'pluck', {size:9, alpha:0.55, d:0.7, s:0.25, r:0.6, rev:0.35}],
     seq:['pluck', 'pluck', {size:16, alpha:0.45, d:0.3, s:0.05, r:0.4, rev:0.4, pan:-0.25}], run:['pluck', 'pluck', {size:16, alpha:0.5, d:0.3, s:0.05, r:0.5, rev:0.45}],
     motif:['pluck', 'pluck', {size:10, alpha:0.55, d:0.5, s:0.2, r:0.5, rev:0.35, dly:0.2}],
-    callResp:[['wind', 'soft', {size:20, alpha:0.7, a:0.05, glide:0.1, rev:0.5, q:5, pan:-0.3}], ['sawtooth', 'soft', {size:10, alpha:0.6, uni:16, a:0.04, glide:0.08, rev:0.45, pan:0.3, lfoD:12}]],
+    callResp:[['triangle', 'soft', {size:14, alpha:0.7, a:0.06, glide:0.1, rev:0.5, lfoD:10, lfoR:5, pan:-0.3, breath:0.5}], ['sawtooth', 'soft', {size:10, alpha:0.6, uni:16, a:0.04, glide:0.08, rev:0.45, pan:0.3, lfoD:12}]],
     glide:['sawtooth', 'soft', {size:11, alpha:0.6, glide:0.25, a:0.06, rev:0.5, lfoD:16, lfoR:5.8}],
     bass:['pluck', 'pluck', {size:6, alpha:0.85, d:0.6, s:0.35, r:0.2, rev:0.08}], bass2:['sub', 'hard', {size:12, alpha:0.8, r:0.25, rev:0.03}],
     riser:['sawtooth', 'swell', {size:12, alpha:0.5, uni:24, rev:0.5, glide:0.3}], down:['sawtooth', 'hard', {size:12, alpha:0.55, uni:16, rev:0.45, glide:0.2}],
@@ -404,9 +413,10 @@ egypt:{name:'埃及沙漠', desc:'D 希賈茲（阿拉伯）・104 BPM・D–Cm(
     Digit4:{role:'hats', name:'鈴鼓 Riq'},
     Digit5:{role:'beat', name:'Malfuf 快板', bars:[{tom:[0, 2], snare:[0.75, 1.5, 2.75, 3.5, [0.25, 0.35], [2.25, 0.35]]}]},
     Digit6:{role:'beat', name:'Ayoub 恍惚', bars:[{tom:[0, 0.75, 2, 2.75], snare:[1.5, 3.5, [1, 0.4], [3, 0.4]]}]},
+    KeyL:{vol:0.5},
     KeyI:{role:'tremolo', name:'卡農琴 輪指', T:['pluck', 'pluck', {size:16, alpha:0.45, d:0.2, s:0.05, r:0.25, rev:0.4}], rate:0.125},
     KeyA:{role:'ornament', name:'弦樂齊奏 8 小節', theme:true, bars:8},
-    KeyS:{role:'ornament', name:'蘆笛 Ney 獨奏', T:['wind', 'soft', {size:20, alpha:0.75, a:0.06, glide:0.12, rev:0.5, q:5, lfoD:10, lfoR:5}], m:{center:6}},
+    KeyS:{role:'ornament', name:'蘆笛 Ney 獨奏', vol:0.5, T:['triangle', 'soft', {size:14, alpha:0.75, a:0.08, glide:0.12, rev:0.5, lfoD:10, lfoR:5, breath:0.5}], m:{center:6}},
     KeyJ:{role:'ornament', name:'吟唱 Ya Leili', T:['choir', 'soft', {size:15, alpha:0.6, a:0.08, glide:0.14, rev:0.55, lfoD:14, lfoR:5.5}], rhy:[[[0, 2], [2, 2]], [[0, 3], [3, 1]], [[0, 1], [1, 1], [2, 2]], [[0, 4]]], m:{center:4}}}},
 
 /* ============================================================ */

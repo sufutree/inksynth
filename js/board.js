@@ -89,7 +89,7 @@ function flashPad(i){ const pe = padEls[i]; if(!pe) return; pe.el.classList.add(
 function boardHint(){
   $('#boardHint').innerHTML = S.mode === 'play'
     ? '按鍵盤上對應的鍵，或直接點擊音效板・<b>→</b> 單次　<b>↻</b> 循環，再按一次＝播完這圈停止・<b>⚡</b> 不對齊　<b>♮</b> 獨立調性<br><kbd>Shift</kbd>＋按鍵＝立即停止該音色・<kbd>Esc</kbd> 全部立即停止'
-    : '<span style="color:var(--square)">編輯模式</span>：點任一格進入繪製・鍵盤按鍵仍可彈奏';
+    : '<span style="color:var(--square)">編輯模式</span>：點任一格進入繪製・鍵盤不會彈奏，要演奏請切回「▶ 演奏」';
 }
 /** 依可用高度決定音效板寬度，讓 4 列剛好放得下 */
 function fitBoard(){

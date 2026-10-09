@@ -69,6 +69,7 @@ addEventListener('keydown', e => {
     if((e.code === 'Delete' || e.code === 'Backspace') && S.sel){ e.preventDefault(); deleteSel(); return; }
     if(editorKey(e)){ e.preventDefault(); return; }   // 有選取時：字母、方向鍵用來編輯音高，不觸發音效格
   }
+  if(S.mode === 'edit') return;   // 編輯模式只編輯、不演奏（編輯器裡用空白鍵試聽）
   if(volumeKey(e, held)){ e.preventDefault(); return; }   // 按住格子的鍵＋↑↓：調那一格的音量
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   const i = S.pads.findIndex(p => p.key === e.code);
