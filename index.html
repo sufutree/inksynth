@@ -77,7 +77,7 @@
   <section id="boardView">
     <div id="board"></div>
     <div id="boardHint"></div>
-    <div id="copyright">© 2026 sufutree・你創作的音樂可以自由商用，平台本身保留所有權利・<a id="licLink">使用規範</a></div>
+    <div id="copyright">© 2026 sufutree・你創作的音樂可以自由商用，平台本身保留所有權利・<a id="licLink">使用規範</a><span class="fbEntry" hidden>・<a data-feedback>意見回報</a></span></div>
   </section>
 
   <!-- 疊合總覽 -->
@@ -241,6 +241,27 @@
 </div>
 <div id="coach" hidden role="status"><span class="coachStep" id="coachStep"></span><div class="coachMain"><div class="coachTop"><b id="coachText"></b><span id="coachTime"></span></div><div id="coachPads"></div><div id="coachOops" hidden></div></div><div class="coachBtns"><button id="coachNext" class="hbtn pri" hidden>下一關 ▶</button><button id="coachAgain" class="hbtn" hidden>再一次</button><button id="coachX" class="hbtn">結束</button></div></div>
 
+<!-- 問題／意見回報（送到 Google 表單） -->
+<div class="modal" id="feedback" hidden>
+  <div class="mbox fbox" role="dialog" aria-labelledby="fbTitle">
+    <div class="mhead"><b id="fbTitle">💬 回報問題／建議</b><button class="hbtn" id="fbClose">✕ 關閉</button></div>
+    <div class="fbBody" id="fbForm">
+      <div class="seg" id="fbType"><button data-v="問題回報" class="on">🐞 問題</button><button data-v="功能建議">💡 建議</button><button data-v="其他">💬 其他</button></div>
+      <label class="fbLab">想告訴我們什麼？
+        <textarea id="fbText" rows="6" maxlength="3000" placeholder="例如：在手機上進第一關，按了 Z 之後沒有聲音……&#10;越詳細越好：在哪個畫面、按了什麼、你預期會怎樣。"></textarea></label>
+      <label class="fbLab">聯絡方式（選填）
+        <input type="text" id="fbContact" maxlength="200" placeholder="想收到回覆的話，留 Email 或 Threads 帳號"></label>
+      <label class="fbCheck"><input type="checkbox" id="fbInfo" checked> 附上裝置資訊（瀏覽器、螢幕大小、目前的範本；不包含你的作品）</label>
+      <pre class="fbInfoPre" id="fbInfoPre"></pre>
+      <div class="fbBtns"><span class="fbMsg" id="fbMsg"></span><button class="hbtn" id="fbCancel">取消</button><button class="hbtn pri" id="fbSend">送出</button></div>
+    </div>
+    <div class="fbBody fbDone" id="fbDone" hidden>
+      <div class="fbBig">🙏</div><p><b>謝謝你！已經收到了。</b></p><p class="fbSmall">每一則回報都會看，有留聯絡方式的話會盡量回覆。</p>
+      <button class="hbtn pri" id="fbOk">好</button>
+    </div>
+  </div>
+</div>
+
 <!-- 使用說明 -->
 <button id="helpBtn" title="使用說明（F1）">?</button>
 <div id="helpTip" hidden>不知道怎麼玩？點這裡看說明 <button id="helpTipX">✕</button></div>
@@ -261,6 +282,7 @@
         <button data-ch="keys">⌘ 快捷鍵一覽</button>
         <button data-ch="faq">❓ 常見問題</button>
         <button data-ch="license">📜 授權與使用規範</button>
+        <button class="fbEntry" data-feedback hidden>💬 回報問題／建議</button>
       </nav>
       <div class="hbody" id="helpBody">
 
@@ -560,6 +582,8 @@
             <dd>可能是游標還停在輸入框或下拉選單裡（例如剛改完 BPM），先點一下空白處再按。在編輯器裡，數字鍵是用來切換工具的，不會播放第 1–10 格。</dd>
             <dt>想把某一格換到別的按鍵？</dt>
             <dd>進編輯器點上方的「按鍵 Q」，再按新的鍵；如果那個鍵已經被用了，兩格會互換。</dd>
+            <dt class="fbEntry" hidden>上面都沒有解決？</dt>
+            <dd class="fbEntry" hidden>歡迎 <a data-feedback>💬 回報問題或建議</a>，告訴我們發生了什麼事。</dd>
           </dl>
         </section>
 
@@ -600,5 +624,6 @@
 <script src="js/main.js"></script>
 <script src="js/help.js"></script>
 <script src="js/welcome.js"></script>
+<script src="js/feedback.js"></script>
 </body>
 </html>

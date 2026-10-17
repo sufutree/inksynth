@@ -52,6 +52,7 @@ addEventListener('keydown', e => {
   // 使用說明：F1 開關；說明打開時鍵盤不彈奏，只留 Esc 關閉
   if(e.code === 'F1'){ e.preventDefault(); if(bindingKey){ bindingKey = false; syncEditorBar(); } toggleHelp(); return; }
   if(helpOpen()){ if(e.code === 'Escape') closeHelp(); return; }
+  if(feedbackOpen()){ if(e.code === 'Escape') closeFeedback(); return; }   // 回報視窗：打字不會觸發音效格
   if(bindingKey){
     e.preventDefault();
     if(e.code === 'Escape'){ bindingKey = false; syncEditorBar(); }
@@ -62,7 +63,7 @@ addEventListener('keydown', e => {
   const undoKey = (e.ctrlKey || e.metaKey) && !e.altKey && (e.code === 'KeyZ' || e.code === 'KeyY');
   // 改完下拉選單（例如「長度」）後焦點會停在選單上，復原／重做照樣要能用；文字輸入框保留瀏覽器自己的文字復原
   if(tag === 'SELECT' && undoKey && S.editing !== null) e.target.blur();
-  else if(tag === 'SELECT' || (tag === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')){ if(e.code === 'Escape') e.target.blur(); return; }
+  else if(tag === 'SELECT' || tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')){ if(e.code === 'Escape') e.target.blur(); return; }
   if(e.code === 'Escape'){
     if($('#globMore').classList.contains('open')) toggleMore(false);
     else if(!$('#impModal').hidden) closeImport();
