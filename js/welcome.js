@@ -5,7 +5,8 @@
    ・關卡：照一份編排一步一步帶著按，每一步要按的格子會亮起來；還沒到時間會倒數，到了就提示「現在按」。
      晚按也沒關係，後面的時間會跟著往後挪。
        第一關  午夜藍調：一次一個鍵，約 1 分鐘
-       第三關  夜店 House：宣傳片裡的那 30 秒，一次好幾個鍵（第二關製作中）
+       第二關  Bossa Nova：一次 2–3 個鍵，學會關掉、換一組
+       第三關  夜店 House：宣傳片裡的那 30 秒，一次好幾個鍵
    ============================================================ */
 const WELCOME_SEEN = 'inksynth-welcome-v1';
 const welcomeSeen = () => { try{ return !!localStorage.getItem(WELCOME_SEEN); }catch(_){ return true; } };
@@ -19,16 +20,33 @@ $('#wGo').onclick = () => { closeWelcome(); initAudio(); boardReady.then(() => s
 
 /* ---------- 關卡 ---------- */
 const LEVELS = {
-  /* 第一關：午夜藍調（92 BPM、搖擺）。一次只按一個鍵，從鼓、低音、伴奏一層層疊上去，再讓主旋律、副旋律唱完 */
+  /* 第一關：午夜藍調（92 BPM、搖擺）。一次只按一個鍵。
+     低音從第 2 小節進來，之後跟著和弦走的格子都要隔 4 小節的倍數（和低音同一個和弦循環）才進來 */
   1:{name:'第一關：午夜藍調', tpl:'blues', align:{Digit8:'bar'}, steps:[
     {bar:0,  title:'先讓鼓跑起來', go:['Digit1']},
     {bar:2,  title:'加上低音，一步一步往上走的 Walking Bass', go:['KeyZ']},
-    {bar:4,  title:'風琴伴奏進來', go:['KeyR']},
-    {bar:8,  title:'主旋律登場（會唱 8 小節）', go:['KeyA']},
-    {bar:12, title:'加一點鋼琴切分', go:['KeyW']},
-    {bar:16, title:'換副旋律接著唱', go:['KeyS']},
-    {bar:19, title:'鼓過門，準備收尾', go:['Digit8']},
-    {bar:20, title:'結尾：按下結束和弦（其他聲音會在同一小節停下）', go:['Slash'], end:true},
+    {bar:6,  title:'低音跑完一輪了，風琴伴奏進來', go:['KeyR']},
+    {bar:10, title:'主旋律登場（會唱 8 小節）', go:['KeyA']},
+    {bar:14, title:'加一點鋼琴切分', go:['KeyW']},
+    {bar:18, title:'換副旋律接著唱', go:['KeyS']},
+    {bar:21, title:'鼓過門，準備收尾', go:['Digit8']},
+    {bar:22, title:'結尾：按下結束和弦（其他聲音會在同一小節停下）', go:['Slash'], end:true},
+  ]},
+  /* 第二關：Bossa Nova 海灘（124 BPM）。一次 2–3 個鍵，學會「關掉」：
+     換一組吉他和低音、讓鼓停一下再回來。這個範本的和弦兩兩疊在一起都好聽，循環都是 1 或 2 小節 */
+  2:{name:'第二關：Bossa Nova 海灘', tpl:'bossa', align:{}, steps:[
+    {bar:0,  title:'節奏先來：Bossa 律動加沙鈴', go:['Digit1', 'Digit2']},
+    {bar:2,  title:'吉他和低音一起進來', go:['KeyQ', 'KeyZ']},
+    {bar:6,  title:'長笛主旋律，配上響棒', go:['KeyA', 'Digit3']},
+    {bar:8,  title:'長笛答句，鋪上弦樂', go:['KeyS', 'KeyT']},
+    {bar:10, title:'換一組和弦：先把吉他和低音關掉（再按一次，播完這圈就停）', stop:['KeyQ', 'KeyZ'], go:[]},
+    {bar:10, title:'接著換上另一組吉他和低音', go:['KeyW', 'KeyX']},
+    {bar:12, title:'人聲 Scat 和阿哥哥鈴', go:['KeyD', 'Digit7']},
+    {bar:14, title:'口哨接著唱，弦樂先收起來', stop:['KeyT'], go:['KeyF']},
+    {bar:16, title:'安靜一下：關掉鼓和沙鈴，換成輕輕的鼓刷', stop:['Digit1', 'Digit2'], go:['Digit6']},
+    {bar:20, title:'鼓回來了！弱音小號登場', go:['Digit1', 'KeyK']},
+    {bar:23, title:'過門，準備收尾', go:['Digit8']},
+    {bar:24, title:'結尾：收尾和弦加上結尾鼓（其他聲音會在同一小節停下）', go:['Slash', 'Digit0'], end:true},
   ]},
   /* 第三關：夜店 House（124 BPM）。宣傳片的編排，和 宣傳素材/source/record-house.js 的 PLAN 相同 */
   3:{name:'第三關：夜店 House', tpl:'house', align:{Digit9:'bar', KeyM:'bar', KeyB:'bar'}, steps:[
