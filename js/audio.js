@@ -380,7 +380,9 @@ function schedulePass(p, v, t0){
 }
 function pumpPass(v, ps, until){
   if(ps.qi >= ps.queue.length) return;
-  withKey(v.pad, () => { while(ps.qi < ps.queue.length && ps.queue[ps.qi].t < until){ scheduleObj(ps.queue[ps.qi].o, ps.t0, v.dur, ps); ps.qi++; } });
+  withKey(v.pad, () => { while(ps.qi < ps.queue.length && ps.queue[ps.qi].t < until){
+    if(!(ps.queue[ps.qi].t >= v.cutAt - 1e-3)) scheduleObj(ps.queue[ps.qi].o, ps.t0, v.dur, ps);   // 被結尾格切掉的時間之後，不再排新的音
+    ps.qi++; } });
 }
 function silencePass(ps, fade){
   const now = ctx.currentTime;
@@ -392,7 +394,7 @@ function silencePass(ps, fade){
 function startVoice(id, p, opt = {}){
   if(!p || !p.objects.length) return false;
   initAudio(); stopPad(id, 0.02);
-  const t0 = launchTime(opt.immediate, p.align), dur = padDur(p), loop = opt.loop ?? p.mode !== 'oneshot';
+  const t0 = launchTime(opt.immediate, p.align), dur = padDur(p), loop = opt.loop ?? p.mode === 'loop';
   const v = {pad:p, out:makeOut(padGain(id) ?? p.vol), passes:[], t0, upto:t0, dur, loop, endAt:loop ? Infinity : t0 + dur, stopping:false, preview:!!opt.preview};
   voices.set(id, v); schedulePass(p, v, t0); onVoiceChange(id);
   return true;
@@ -416,6 +418,27 @@ function stopAtCycleEnd(id){
   v.passes = v.passes.filter(ps => { if(ps.t0 >= end - 1e-6){ silencePass(ps, 0.01); return false; } return true; });
   Object.assign(v, {loop:false, stopping:true, endAt:end, upto:end - v.dur});
   onVoiceChange(id);
+}
+/** 在音訊時間 at 停止（淡出 fade 秒）：在那之前照常播，之後不再排新的音 */
+function cutPadAt(id, at, fade = 0.06){
+  const v = voices.get(id); if(!v) return;
+  if(at <= ctx.currentTime + 0.01){ stopPad(id, fade); return; }
+  Object.assign(v, {loop:false, stopping:true, endAt:Math.min(v.endAt, at), cutAt:at});
+  v.passes = v.passes.filter(ps => { if(ps.t0 >= at - 1e-6){ silencePass(ps, 0.01); return false; } return true; });
+  for(const k in v.out){ const gp = v.out[k].gain; gp.cancelScheduledValues(at); gp.setValueAtTime(gp.value, at); gp.linearRampToValueAtTime(0, at + fade); }
+  onVoiceChange(id);
+}
+/** 結尾格：在它進來的那一刻，停掉所有比它早開始的聲音；和它同時（或更晚）開始的保留 */
+let END_CUT = null;
+function endCut(i){
+  const v = voices.get(i); if(!v) return;
+  const at = v.t0; END_CUT = {at};
+  for(const [id, w] of voices) if(id !== i && typeof id === 'number' && w.t0 < at - 0.005) cutPadAt(id, at);
+}
+/** 結尾格已經按下、還沒進來時，又按了別格：比結尾早開始的一樣會被切掉 */
+function applyEndCut(i){
+  if(!END_CUT || ctx.currentTime >= END_CUT.at){ END_CUT = null; return; }
+  const v = voices.get(i); if(v && v.t0 < END_CUT.at - 0.005) cutPadAt(i, END_CUT.at);
 }
 /** 在「準備停止」期間再按一次 → 繼續循環 */
 function resumeLoop(id){
@@ -452,7 +475,7 @@ function padState(id){
   if(t > v.endAt) return {state:null};
   return {state:'playing', prog:(el % v.dur) / v.dur, el, stopping:v.stopping};
 }
-/** 演奏模式的觸發：單次＝從頭播一次；循環＝再按一次就播完這圈停止。shift = 立即停止 */
+/** 演奏模式的觸發：單次＝從頭播一次；循環＝再按一次就播完這圈停止；結尾＝播一次並收掉其他聲音。shift = 立即停止 */
 function trigger(i, shift = false){
   if(S.mode === 'edit') return;   // 編輯模式不演奏（編輯器的試聽走 startPad，不經過這裡）
   const p = S.pads[i], v = voices.get(i), st = padState(i).state;
@@ -461,6 +484,7 @@ function trigger(i, shift = false){
   if(v && st && v.stopping && resumeLoop(i)) return;
   if(p.mode === 'loop' && v && st){ stopAtCycleEnd(i); return; }
   startPad(i); flashPad(i);
+  if(p.mode === 'end') endCut(i); else applyEndCut(i);
 }
 
 /* ============ 作畫時的即時試聽 ============ */

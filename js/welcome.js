@@ -161,10 +161,8 @@ function nextTourStep(){
 }
 /** 結尾：其他還在播的聲音，在結束和弦進來的那一刻一起停 */
 function finishTour(){
-  const st = TOUR[TS.k], ends = new Set(st.go.map(padIdx)), v = voices.get(padIdx('Slash'));
-  const at = v ? v.t0 : ctx.currentTime;
   clearInterval(TS.poll); TS.poll = null;
-  TS.endTimer = setTimeout(() => { for(const id of [...voices.keys()]) if(!ends.has(id)) stopPad(id, 0.05); }, Math.max(0, (at - ctx.currentTime) * 1000 - 20));
+  endCut(padIdx('Slash'));   // 和「⇥ 結尾」模式一樣：結束和弦進來的那一刻，比它早開始的聲音一起收掉
   $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
   TS.k = -1;
   $('#coachStep').textContent = '🎉';

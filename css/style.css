@@ -409,7 +409,7 @@ body.mixOpen #coach{bottom:262px}
 }
 .pad.press{transform:scale(.96);border-color:var(--c)}
 /* 編輯器工具列 */
-#eMode{width:160px}
+#eMode{width:225px}
 .ebreak{display:none}
 .onlySm{display:none}
 /* 手機直向：工具列固定兩行，不用左右拖 */
@@ -422,10 +422,11 @@ body.mixOpen #coach{bottom:262px}
   .ebar > *{order:3}
   #eDone,#eName,#eKey,#ePlay{order:1}
   .ebreak{display:block;flex:0 0 100% !important;height:0;order:2}
+  .ebreak.b2{order:4}
+  .ebar label.lab:has(#eVol){order:5;flex:1 1 100%}
   .onlySm{display:inline}
-  #eMode{width:auto;flex:none}
+  #eMode{width:auto;flex:1 1 auto}
   #eMode button{padding:6px 8px}
-  .ebar label.lab:has(#eVol){flex:1 1 60px;min-width:0}
   .ebar #eVol{width:auto;flex:1;min-width:40px}
 }
 body.touring #boardView{padding-bottom:150px}

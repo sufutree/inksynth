@@ -68,7 +68,7 @@ const DYN_MODES = {fixed:{zh:'固定', sub:'不變'}, speed:{zh:'速度', sub:'�
 const SHAPES = {tri:{zh:'△', sub:'3 個音'}, sq:{zh:'□', sub:'4 個音'}, circle:{zh:'○', sub:'5 個以上'}};
 const SHAPE_N = {tri:3, sq:4, circle:5};
 const shapeOfCount = n => n <= 3 ? 'tri' : n === 4 ? 'sq' : 'circle';
-const PAD_MODES = {oneshot:'→ 單次', loop:'↻ 循環'};
+const PAD_MODES = {oneshot:'→ 單次', loop:'↻ 循環', end:'⇥ 結尾'};   // 結尾：播一次，並在它進來的那一刻停掉其他比它早開始的聲音
 const ALIGNS = {global:'跟隨全域', off:'立即', beat:'對拍', bar:'對小節'};
 const GRIDS = {1:{zh:'1/4', sub:'一拍'}, 2:{zh:'1/8', sub:'半拍'}, 4:{zh:'1/16', sub:'四分之一拍'}, 3:{zh:'三連音', sub:'1/8T'}};
 
@@ -120,7 +120,7 @@ const keyLabel = c => !c ? '—' : c.startsWith('Key') ? c.slice(3) : c.startsWi
 const newPad = i => ({name:'', key:PAD_KEYS[i], mode:'oneshot', beats:4, vol:0.8, align:'global', ownKey:null, objects:[]});
 /** 補齊音效格的設定（也負責把舊版資料升級：「按住」模式改成循環） */
 function normalizePad(p){
-  p.mode = p.mode === 'oneshot' ? 'oneshot' : 'loop';
+  p.mode = p.mode === 'oneshot' || p.mode === 'end' ? p.mode : 'loop';
   if(!ALIGNS[p.align]) p.align = 'global';
   const k = p.ownKey;
   p.ownKey = k && SCALES[k.scale] ? {root:((+k.root || 0) % 12 + 12) % 12, scale:k.scale} : null;

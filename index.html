@@ -109,7 +109,7 @@
       <input type="text" id="eName" maxlength="16" placeholder="音效名稱">
       <button class="hbtn" id="eKey">按鍵 Q</button>
       <div class="seg" id="eMode">
-        <button data-v="oneshot">→ 單次</button><button data-v="loop">↻ 循環</button>
+        <button data-v="oneshot" title="按一下播一次">→ 單次</button><button data-v="loop" title="一直重複，再按一次播完這圈停">↻ 循環</button><button data-v="end" title="播一次，並在它進來的那一刻停掉其他比它早開始的聲音（和它同時按的會保留）">⇥ 結尾</button>
       </div>
       <label class="lab"><span class="lt">長度 </span><select id="eBeats" title="這一格有多長">
         <option value="1">1 拍</option><option value="2">2 拍</option><option value="4">1 小節</option>
@@ -118,6 +118,7 @@
       <button class="hbtn" id="ePlay">▶ 試聽<span class="lt">整格</span></button>
       <span class="ebreak"></span>
       <button class="hbtn" id="eImport" title="從範本或音色庫拿一格現成的過來">📥<span class="lt"> 匯入音色</span></button>
+      <span class="ebreak b2"></span>
       <button class="hbtn" id="eSpecialBtn" title="這格不跟隨全域設定的特例選項">⚙ 特例</button>
     </div>
     <div class="ebar ebar2" id="eSpecial" hidden>
@@ -293,6 +294,7 @@
             <tr><th>格子右上角</th><th>意思</th><th>怎麼停</th></tr>
             <tr><td><b>→</b> 單次</td><td>按一下播一次</td><td>播完自己停</td></tr>
             <tr><td><b>↻</b> 循環</td><td>一直重複播放</td><td>再按一次 → 播完這圈停（格子會變虛線閃爍）</td></tr>
+            <tr><td><b>⇥</b> 結尾</td><td>播一次，並在它進來的那一刻，把比它早開始的聲音全部收掉（同時按下、同時進來的格子會保留）</td><td>播完自己停</td></tr>
           </table>
           <ul>
             <li><kbd>Shift</kbd>＋格子的鍵：<b>立刻</b>停止那一格。手機、平板上：<b>按住格子不放</b>約半秒。</li>
@@ -360,7 +362,7 @@
           <h3>上方工具列</h3>
           <ul>
             <li><b>名稱</b>、<b>按鍵</b>：點「按鍵 Q」，再按一個新的鍵就能換鍵。如果新鍵已經有別格在用，兩格會互換。</li>
-            <li><b>→ 單次／↻ 循環</b>、<b>長度</b>（1 拍到 8 小節）、<b>音量</b>。</li>
+            <li><b>→ 單次／↻ 循環／⇥ 結尾</b>、<b>長度</b>（1 拍到 8 小節）、<b>音量</b>。</li>
             <li><b>▶ 試聽整格</b>（<kbd>Space</kbd>）：會一直循環播放，可以邊畫邊聽，改動在下一圈生效。</li>
             <li><b>📥 匯入音色</b>：從範本或音色庫拿一格現成的過來，見 <a data-go="file">存檔與音色庫</a>。</li>
           </ul>
