@@ -395,7 +395,10 @@ body.mixOpen #coach{bottom:262px}
 .pad.coachStop{outline:3px solid #ff6b7a;outline-offset:2px;animation:coachPulse .45s infinite alternate;z-index:1}
 .pad.coachSoon{outline:2px dashed #7cf0d088;outline-offset:2px}
 @keyframes coachPulse{to{outline-color:transparent}}
-.tourBtn{width:100%;padding:12px 14px;font-size:15px;margin:10px 0 4px}
+.levels{display:grid;gap:8px;margin:10px 0 4px}
+.tourBtn{width:100%;padding:11px 14px;font-size:15px;text-align:left}
+.tourBtn small{display:block;font-size:12px;font-weight:500;opacity:.8;margin-top:2px}
+.tourBtn:disabled{opacity:.45;cursor:default}
 @media (max-width:600px){ #coach{font-size:13px;left:8px;right:8px;transform:none;width:auto;bottom:max(8px, env(safe-area-inset-bottom));gap:8px} }
 /* 矮螢幕（手機橫向）：把說明文字、版權收起來，讓格子大一點 */
 @media (max-height:520px){

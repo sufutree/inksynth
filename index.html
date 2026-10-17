@@ -234,11 +234,11 @@
       <li>想自己做聲音？切到 <b>✎ 編輯</b>，點一格就能用畫筆畫</li>
     </ol>
     <p class="wnote touchOnly">📱 沒有聲音的話：請關閉手機的靜音模式，並把音量調大。</p>
-    <div class="wbtns"><button class="hbtn pri" id="wGo">▶ 30 秒做出第一首曲子</button><button class="hbtn" id="wSkip">我自己逛逛</button></div>
+    <div class="wbtns"><button class="hbtn pri" id="wGo">▶ 第一關：跟著按，做出一首藍調（約 1 分鐘）</button><button class="hbtn" id="wSkip">我自己逛逛</button></div>
     <a id="wHelp" class="wlink">看完整使用說明</a>
   </div>
 </div>
-<div id="coach" hidden role="status"><span class="coachStep" id="coachStep"></span><div class="coachMain"><div class="coachTop"><b id="coachText"></b><span id="coachTime"></span></div><div id="coachPads"></div></div><div class="coachBtns"><button id="coachAgain" class="hbtn" hidden>再一次</button><button id="coachX" class="hbtn">結束</button></div></div>
+<div id="coach" hidden role="status"><span class="coachStep" id="coachStep"></span><div class="coachMain"><div class="coachTop"><b id="coachText"></b><span id="coachTime"></span></div><div id="coachPads"></div></div><div class="coachBtns"><button id="coachNext" class="hbtn pri" hidden>下一關 ▶</button><button id="coachAgain" class="hbtn" hidden>再一次</button><button id="coachX" class="hbtn">結束</button></div></div>
 
 <!-- 使用說明 -->
 <button id="helpBtn" title="使用說明（F1）">?</button>
@@ -264,7 +264,12 @@
 
         <section data-ch="start">
           <h2>🚀 30 秒上手</h2>
-          <button class="hbtn pri tourBtn" id="helpTour">▶ 開始 30 秒挑戰：一步一步做出宣傳片裡的音樂</button>
+          <div class="levels">
+            <button class="hbtn pri tourBtn" data-level="1">▶ 第一關：午夜藍調<small>一次一個鍵・約 1 分鐘・入門</small></button>
+            <button class="hbtn tourBtn" disabled>第二關<small>製作中</small></button>
+            <button class="hbtn tourBtn" data-level="3">▶ 第三關：夜店 House<small>宣傳片的 30 秒・一次好幾個鍵・進階</small></button>
+          </div>
+          <p class="tip">💡 關卡會一步一步告訴你按哪一格（亮起來的那格），還沒輪到會倒數，到了就提示「現在按」。</p>
           <p class="lead">InkSynth 是用「畫畫」做音樂的音效板。每一格是一段聲音，對應鍵盤上的一個鍵。先聽聽看範本就知道怎麼玩了。</p>
           <ol class="steps">
             <li><b>選一套範本</b><br>點右上角的「🎼 範本…」，挑一種曲風（Lo-fi、House、和風…）。第一次打開時已經幫你載入一套了。

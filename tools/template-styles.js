@@ -172,7 +172,7 @@ wafu:{name:'日式和風', desc:'D 都節音階・84 BPM・太鼓、箏、三味
     KeyA:{role:'ornament', name:'尺八 主旋律 8 小節', theme:true, bars:8}, KeyS:{role:'ornament', name:'篠笛', T:['triangle', 'soft', {size:18, alpha:0.65, a:0.03, glide:0.1, rev:0.45, texture:'wave'}], m:{center:7}}}},
 
 /* ============================================================ */
-blues:{name:'午夜藍調', desc:'E 藍調・92 BPM・E9–A13–E7(♯9)–B13sus4，搖擺節奏、風琴與口琴', root:4, scale:'blues', bpm:92, seed:105,
+blues:{name:'午夜藍調', desc:'E 藍調・92 BPM・E9–A13–E7(♯9)–B13sus4，搖擺節奏、風琴與吉他', root:4, scale:'blues', bpm:92, seed:105,
   hscale:'chromatic', allowDom:true,
   /* E7 要 G♯、A7 要 G，沒有一個 7 音音階同時有這兩個音，所以和弦部分用半音階（不鎖定）直接寫音；
      旋律用藍調音階：藍調音（G、B♭）和屬七和弦的摩擦正是藍調的味道。級數＝距離 E 的半音數 */
@@ -185,8 +185,9 @@ blues:{name:'午夜藍調', desc:'E 藍調・92 BPM・E9–A13–E7(♯9)–B13s
     comp:['organ', 'hard', {size:11, alpha:0.5, rev:0.3, texture:'wave', lfoD:6, lfoR:6.5}], arp:['pluck', 'pluck', {size:12, alpha:0.5, d:0.5, s:0.15, r:0.5, rev:0.3}],
     strings8:['organ', 'swell', {size:9, alpha:0.4, rev:0.4, lfoD:6, lfoR:6}], choir:['choir', 'soft', {size:14, alpha:0.45, rev:0.45, a:0.3}],
     offbeat:['pluck', 'pluck', {size:13, alpha:0.5, d:0.3, s:0.1, r:0.3, rev:0.25, drive:0.2}], alt:['organ', 'soft', {size:12, alpha:0.45, a:0.05, rev:0.35, texture:'wave'}],
-    themeA8:['sawtooth', 'soft', {size:9, alpha:0.68, a:0.04, glide:0.06, rev:0.3, lfoD:10, lfoR:5.5, texture:'wave'}],
-    themeB:['square', 'soft', {size:9, alpha:0.6, a:0.05, glide:0.07, rev:0.3, lfoD:12, lfoR:5.8}], hook:['sawtooth', 'hard', {size:12, alpha:0.6, drive:0.35, glide:0.05, rev:0.3}],
+    /* 主旋律、副旋律：青色三角波＋利鋒＋波浪（顫音），乾淨、咬字清楚 */
+    themeA8:['triangle', 'hard', {size:14, alpha:0.72, glide:0.06, rev:0.3, dly:0.12, lfoD:10, lfoR:5.5, texture:'wave'}],
+    themeB:['triangle', 'hard', {size:13, alpha:0.66, glide:0.07, rev:0.3, dly:0.12, lfoD:12, lfoR:5.8, texture:'wave'}], hook:['sawtooth', 'hard', {size:12, alpha:0.6, drive:0.35, glide:0.05, rev:0.3}],
     run:['sawtooth', 'hard', {size:12, alpha:0.62, drive:0.4, glide:0.06, rev:0.3, dly:0.15}], seq:['pluck', 'pluck', {size:12, alpha:0.45, d:0.4, s:0.1, r:0.4, rev:0.3}],
     callResp:[['square', 'soft', {size:9, alpha:0.6, a:0.04, glide:0.07, rev:0.3, pan:-0.3, lfoD:10}], ['sawtooth', 'hard', {size:12, alpha:0.55, drive:0.35, glide:0.05, rev:0.3, pan:0.3}]],
     glide:['sawtooth', 'soft', {size:10, alpha:0.6, glide:0.2, drive:0.3, rev:0.35, lfoD:14, lfoR:5.5}],
@@ -194,8 +195,8 @@ blues:{name:'午夜藍調', desc:'E 藍調・92 BPM・E9–A13–E7(♯9)–B13s
     stutter:['organ', 'hard', {size:12, alpha:0.5, texture:'dash', rev:0.3}], drone:['organ', 'swell', {size:9, alpha:0.4, rev:0.4, lfoD:5, lfoR:0.3}],
     outro:['organ', 'swell', {size:11, alpha:0.5, rev:0.5, r:2.5, texture:'wave'}]},
   N:{groove:'Shuffle', groove4:'Shuffle＋過門', hats:'搖擺 Hat', perc:'拍手', half:'慢搖', break:'只剩 Hat', pad:'風琴長音', stabs:'鋼琴切分', arp:'三連音分解',
-    comp:'風琴伴奏', strings8:'風琴鋪底 8 小節', choir:'和聲', offbeat:'吉他切音', alt:'九和弦版本', strum:'吉他刷弦', shimmer:'泛音', themeA8:'口琴主旋律 8 小節',
-    themeB:'口琴副旋律', hook:'吉他 Riff', counter:'低音對位', seq:'鋼琴三連音', run:'吉他 Lick', harmony8:'口琴和聲', motif:'鋼琴動機', callResp:'口琴與吉他對答',
+    comp:'風琴伴奏', strings8:'風琴鋪底 8 小節', choir:'和聲', offbeat:'吉他切音', alt:'九和弦版本', strum:'吉他刷弦', shimmer:'泛音', themeA8:'主旋律 8 小節',
+    themeB:'副旋律', hook:'吉他 Riff', counter:'低音對位', seq:'鋼琴三連音', run:'吉他 Lick', harmony8:'主旋律和聲', motif:'鋼琴動機', callResp:'旋律與吉他對答',
     glide:'推弦滑音', bass:'Walking Bass', bass2:'Boogie 低音', texture:'酒館人聲', stutter:'切片風琴', outro:'結束 E9'}},
 
 /* ============================================================ */
