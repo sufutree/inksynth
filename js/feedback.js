@@ -6,8 +6,8 @@
    還沒設定時，所有回報入口都會藏起來。
    ============================================================ */
 const FEEDBACK = {
-  form:'',                                            // 例：1FAIpQLSc…（表單網址 /forms/d/e/ 後面那一段）
-  entries:{type:'', text:'', contact:'', info:''},   // 例：entry.123456789
+  form:'1FAIpQLSeYavHh42FcGhOniSAC8bGFI45GjVerZQ-dD4mi83vuYN4eDQ',   // 表單網址 /forms/d/e/ 後面那一段
+  entries:{type:'entry.1027237237', text:'entry.1263238051', contact:'entry.394487036', info:'entry.405372678'},
 };
 const feedbackReady = () => !!(FEEDBACK.form && FEEDBACK.entries.text);
 const feedbackOpen = () => !$('#feedback').hidden;
@@ -30,7 +30,7 @@ function deviceInfo(){
   ].join('\n');
 }
 
-let fbType = '問題回報', fbLast = 0;
+let fbType = '系統問題', fbLast = 0;   // 必須和 Google 表單「類型」的選項文字完全一樣：系統問題／操作問題／意見回報／其他
 function openFeedback(){
   closeHelp(); $('#fbForm').hidden = false; $('#fbDone').hidden = true; $('#fbMsg').textContent = '';
   $('#fbInfoPre').textContent = deviceInfo(); $('#fbInfoPre').hidden = !$('#fbInfo').checked;

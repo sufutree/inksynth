@@ -454,3 +454,5 @@ body.touring #boardView{padding-bottom:150px}
 .fbBig{font-size:42px}
 .fbSmall{color:var(--muted);font-size:13px;margin:0}
 .hnav button.fbEntry{color:var(--accent)}
+#fbType{grid-template-columns:repeat(4,1fr);grid-auto-flow:row}
+@media (max-width:600px){ #fbType{grid-template-columns:repeat(2,1fr)} }
