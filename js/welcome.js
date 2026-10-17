@@ -2,8 +2,10 @@
 /* ============================================================
    welcome.js — 新手的第一分鐘
    ・第一次來（瀏覽器裡沒有存檔）：歡迎視窗，說明這是什麼、怎麼玩
-   ・「帶我玩一次」：底部導覽列一步一步帶著按 鼓 → 低音 → 和聲 → 旋律，
-     要按的格子會亮起來，按對了就進下一步；最後告訴他怎麼停、怎麼自己畫
+   ・「30 秒挑戰」：載入「夜店 House」，照宣傳片的編排一步一步帶著按，
+     做出宣傳片裡的那 30 秒（16 小節：開場 → 鼓與低音 → 琶音 → Drop → 掃頻 → 過門 → 結尾）。
+     每一步要按的格子會亮起來；還沒到時間會倒數，到了就提示「現在按」。
+     晚按也沒關係，後面的時間會跟著往後挪。
    ============================================================ */
 const WELCOME_SEEN = 'inksynth-welcome-v1';
 const welcomeSeen = () => { try{ return !!localStorage.getItem(WELCOME_SEEN); }catch(_){ return true; } };
@@ -13,51 +15,103 @@ document.body.classList.toggle('touch', matchMedia('(pointer:coarse)').matches);
 function closeWelcome(){ $('#welcome').hidden = true; markWelcome(); }
 $('#wSkip').onclick = closeWelcome;
 $('#wHelp').onclick = () => { closeWelcome(); openHelp('start'); };
-$('#wGo').onclick = () => { closeWelcome(); initAudio(); closeEditor(); setMode('play'); setView('board'); boardReady.then(startCoach); };
+$('#wGo').onclick = () => { closeWelcome(); initAudio(); boardReady.then(() => startTour(true)); };
 
-/* ---------- 導覽：一層一層疊上去 ---------- */
-const COACH_PLAN = [
-  {keys:['Digit1', 'Digit2', 'Digit3'], what:'先放節奏'},
-  {keys:['KeyZ', 'KeyX', 'KeyC'], what:'加上低音'},
-  {keys:['KeyQ', 'KeyW', 'KeyE', 'KeyR'], what:'鋪上和聲'},
-  {keys:['KeyA', 'KeyS', 'KeyD'], what:'最後是旋律'},
+/* ---------- 30 秒挑戰：宣傳片的編排（和 宣傳素材/source/record-house.js 的 PLAN 相同） ---------- */
+const TOUR = [
+  {bar:0,  title:'開場：先鋪上和弦、超鋸齒與 Hi-hat', go:['KeyW', 'KeyQ', 'Digit3']},
+  {bar:2,  title:'鼓和低音進來！拍手和「上升」開始往 Drop 堆', go:['Digit1', 'KeyX', 'Digit7', 'KeyV']},
+  {bar:4,  title:'加上琶音，畫面更滿', go:['KeyE']},
+  {bar:6,  title:'Drop！換成有過門的鼓，加上重擊、Hook 和人聲', stop:['Digit1'], go:['Digit9', 'Digit2', 'KeyD', 'KeyN']},
+  {bar:12, title:'讓它跑一會兒……來一段掃頻', go:['KeyM']},
+  {bar:13, title:'鼓過門，準備收尾', go:['Digit8']},
+  {bar:14, title:'結尾：按下結束和弦（其他聲音會在同一小節停下）', go:['Slash', 'Digit0', 'KeyB'], end:true},
 ];
-const COACH = {steps:[], k:-1, timer:null};
-function startCoach(){
-  COACH.steps = COACH_PLAN.map(st => ({...st, i:st.keys.map(c => S.pads.findIndex(p => p.key === c)).find(i => i >= 0 && S.pads[i].objects.length)}))
-    .filter(st => st.i != null && st.i >= 0);
-  if(!COACH.steps.length) return;
-  COACH.k = 0; showCoachStep();
+const TS = {k:-1, t0:0, seen:null, poll:null, endTimer:null};
+const padIdx = key => S.pads.findIndex(p => p.key === key);
+const barLen = () => 240 / S.bpm;
+
+function startTour(firstRun = false){
+  const t = InkTemplates.map.house;
+  if(!t){ toast('找不到「夜店 House」範本'); return; }
+  if(!firstRun && S.boardName !== t.name && S.pads.some(p => p.objects.length) &&
+     !confirm('「30 秒挑戰」會載入範本「夜店 House」，取代目前的音效板。\n（想保留目前的作品，請先用「☰ 檔案 → 儲存」存檔）\n\n要開始嗎？')) return;
+  endTour(); initAudio(); stopAll(); closeEditor(); setMode('play'); setView('board');
+  applyBoard(t);
+  S.quant = 'bar'; syncGlobals();
+  for(const key of ['Digit9', 'KeyM', 'KeyB']){ const i = padIdx(key); if(i >= 0) S.pads[i].align = 'bar'; }   // 宣傳片裡這三格也對齊小節
+  refreshAllPads(); save();
+  TS.k = 0; TS.t0 = 0; showTourStep();
+  TS.poll = setInterval(pollTour, 120);
 }
-function coachPadMark(i){ $$('.pad.coachPad').forEach(el => el.classList.remove('coachPad')); if(i != null && padEls[i]) padEls[i].el.classList.add('coachPad'); }
-function showCoachStep(){
-  const st = COACH.steps[COACH.k], p = S.pads[st.i], name = esc(p.name || '這一格');
-  $('#coachStep').textContent = `${COACH.k + 1}／${COACH.steps.length}`;
-  $('#coachText').innerHTML = isTouch() ? `${st.what}：點亮著的格子「${name}」`
-    : `${st.what}：按 <kbd>${esc(keyLabel(p.key))}</kbd> 或點亮著的格子「${name}」`;
-  $('#coachX').textContent = '略過';
-  $('#coach').hidden = false; coachPadMark(st.i);
-  padEls[st.i].el.scrollIntoView({block:'nearest', behavior:'smooth'});
+function endTour(){
+  clearInterval(TS.poll); clearTimeout(TS.endTimer); TS.poll = null; TS.k = -1;
+  $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
+  $('#coach').hidden = true; document.body.classList.remove('touring'); fitBoard();
 }
-function finishCoach(){
-  coachPadMark(null); COACH.k = -1;
+$('#coachX').onclick = endTour;
+$('#coachAgain').onclick = () => startTour(false);
+
+function showTourStep(){
+  const st = TOUR[TS.k];
+  TS.seen = new Set();
+  $('#coachStep').textContent = `${TS.k + 1}／${TOUR.length}`;
+  $('#coachText').textContent = st.title;
+  $('#coachX').textContent = '結束'; $('#coachAgain').hidden = true;
+  $('#coach').hidden = false; document.body.classList.add('touring'); fitBoard();
+  renderTourPads(); pollTour();
+}
+const chip = (key, stop, done) => { const i = padIdx(key), p = S.pads[i];
+  return `<span class="chip${stop ? ' stop' : ''}${done ? ' done' : ''}">${done ? '✓' : stop ? '■' : ''}<kbd>${esc(keyLabel(key))}</kbd>${esc(p ? p.name : '')}${stop ? ' 停' : ''}</span>`; };
+function renderTourPads(){
+  const st = TOUR[TS.k];
+  $('#coachPads').innerHTML = [...(st.stop || []).map(k => chip(k, true, TS.seen.has('s' + k))), ...st.go.map(k => chip(k, false, TS.seen.has('g' + k)))].join('');
+}
+/** 每 0.12 秒檢查：要開始的格子有沒有在播、要停的格子有沒有停；也更新倒數 */
+function pollTour(){
+  if(TS.k < 0 || !ctx) return;
+  const st = TOUR[TS.k];
+  let changed = false;
+  for(const key of st.go){ const i = padIdx(key), ps = padState(i);
+    if(!TS.seen.has('g' + key) && ps.state && !ps.stopping){ TS.seen.add('g' + key); changed = true; } }
+  for(const key of st.stop || []){ const ps = padState(padIdx(key));
+    if(!TS.seen.has('s' + key) && (!ps.state || ps.stopping)){ TS.seen.add('s' + key); changed = true; } }
+  if(changed) renderTourPads();
+  // 第一步：開始的時間就是整首的第 0 小節；之後每一步都用實際開始的時間校正（晚按就整個往後挪）
+  const started = st.go.map(k => voices.get(padIdx(k))).filter(Boolean).map(v => v.t0);
+  if(started.length && TS.seen.size){ const t0 = Math.min(...started) - st.bar * barLen(); if(TS.k === 0 || t0 > TS.t0) TS.t0 = t0; }
+  // 倒數：在目標小節的前一小節內按下，對齊小節後剛好在目標小節進來
+  const ready = TS.k === 0 ? 0 : TS.t0 + (st.bar - 1) * barLen(), left = ready - ctx.currentTime;
+  const allDone = st.go.every(k => TS.seen.has('g' + k)) && (st.stop || []).every(k => TS.seen.has('s' + k));
+  const beats = Math.ceil(left / (60 / S.bpm));
+  $('#coachTime').innerHTML = allDone ? '✓ 很好！' : left > 0.05 ? `⏳ 再 <b>${beats}</b> 拍` : '<b class="now">▶ 現在按！</b>';
+  for(const key of [...st.go, ...(st.stop || [])]){ const el = padEls[padIdx(key)]?.el; if(!el) continue;
+    const done = TS.seen.has('g' + key) || (st.stop || []).includes(key) && TS.seen.has('s' + key);
+    el.classList.toggle('coachPad', !done && left <= 0.05 && !(st.stop || []).includes(key));
+    el.classList.toggle('coachStop', !done && left <= 0.05 && (st.stop || []).includes(key));
+    el.classList.toggle('coachSoon', !done && left > 0.05); }
+  if(allDone){
+    if(st.end) return finishTour();
+    $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
+    TS.k++; showTourStep();
+  }
+}
+/** 結尾：其他還在播的聲音，在結束和弦進來的那一刻一起停 */
+function finishTour(){
+  const st = TOUR[TS.k], ends = new Set(st.go.map(padIdx)), v = voices.get(padIdx('Slash'));
+  const at = v ? v.t0 : ctx.currentTime;
+  clearInterval(TS.poll); TS.poll = null;
+  TS.endTimer = setTimeout(() => { for(const id of [...voices.keys()]) if(!ends.has(id)) stopPad(id, 0.05); }, Math.max(0, (at - ctx.currentTime) * 1000 - 20));
+  $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
+  TS.k = -1;
   $('#coachStep').textContent = '🎉';
-  $('#coachText').innerHTML = `你已經在演奏了！${isTouch() ? '同一格再點一次會停下，按住不放立即停止' : '同一格再按一次會停下，<kbd>Esc</kbd> 全部停止'}。想自己做聲音？切到「✎ 編輯」點一格。`;
-  $('#coachX').textContent = '好';
-  clearTimeout(COACH.timer); COACH.timer = setTimeout(endCoach, 14000);
+  $('#coachText').textContent = '完成！這就是宣傳片裡的那 30 秒。';
+  $('#coachPads').innerHTML = `<span class="chipNote">換個範本、換個順序按按看；想自己做聲音，切到「✎ 編輯」點一格。</span>`;
+  $('#coachTime').innerHTML = '';
+  $('#coachX').textContent = '好'; $('#coachAgain').hidden = false;
 }
-function endCoach(){ clearTimeout(COACH.timer); COACH.k = -1; coachPadMark(null); $('#coach').hidden = true; }
-$('#coachX').onclick = endCoach;
-function coachHit(i){
-  if(COACH.k < 0 || i !== COACH.steps[COACH.k].i) return;
-  if(!padState(i).state) return;   // 按了第二次（停掉）不算
-  COACH.k++;
-  if(COACH.k >= COACH.steps.length) finishCoach(); else showCoachStep();
-}
-/* 每次觸發格子（鍵盤或點擊都會經過 trigger）都檢查一下導覽 */
-{ const _trigger = trigger; trigger = function(i, shift){ _trigger(i, shift); if(!shift) coachHit(i); }; }
-/* 切去編輯或總覽就結束導覽 */
-{ const _setMode = setMode; setMode = function(m){ _setMode(m); if(m !== 'play' && COACH.k >= 0) endCoach(); }; }
+/* 切去編輯模式就結束挑戰 */
+{ const _setMode = setMode; setMode = function(m){ _setMode(m); if(m !== 'play' && TS.k >= 0) endTour(); }; }
 
 /* ---------- 第一次來才顯示 ---------- */
 if(!welcomeSeen()){
@@ -65,3 +119,4 @@ if(!welcomeSeen()){
   else { dismissHelpTip(); $('#welcome').hidden = false; }
 }
 addEventListener('keydown', e => { if(e.code === 'Escape' && !$('#welcome').hidden){ e.stopImmediatePropagation(); closeWelcome(); } }, true);
+$('#helpTour').onclick = () => { closeHelp(); startTour(false); };

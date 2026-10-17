@@ -108,15 +108,16 @@
       <span class="eNum" id="eNum"></span>
       <input type="text" id="eName" maxlength="16" placeholder="音效名稱">
       <button class="hbtn" id="eKey">按鍵 Q</button>
-      <div class="seg" id="eMode" style="width:160px">
+      <div class="seg" id="eMode">
         <button data-v="oneshot">→ 單次</button><button data-v="loop">↻ 循環</button>
       </div>
-      <label class="lab">長度 <select id="eBeats">
+      <label class="lab"><span class="lt">長度 </span><select id="eBeats" title="這一格有多長">
         <option value="1">1 拍</option><option value="2">2 拍</option><option value="4">1 小節</option>
         <option value="8">2 小節</option><option value="16">4 小節</option><option value="32">8 小節</option></select></label>
-      <label class="lab">音量 <input type="range" id="eVol" min="0" max="1.2" step="0.05"></label>
-      <button class="hbtn" id="ePlay">▶ 試聽整格</button>
-      <button class="hbtn" id="eImport">📥 匯入音色</button>
+      <label class="lab"><span class="lt">音量 </span><span class="onlySm">🔊</span><input type="range" id="eVol" min="0" max="1.2" step="0.05"></label>
+      <button class="hbtn" id="ePlay">▶ 試聽<span class="lt">整格</span></button>
+      <span class="ebreak"></span>
+      <button class="hbtn" id="eImport" title="從範本或音色庫拿一格現成的過來">📥<span class="lt"> 匯入音色</span></button>
       <button class="hbtn" id="eSpecialBtn" title="這格不跟隨全域設定的特例選項">⚙ 特例</button>
     </div>
     <div class="ebar ebar2" id="eSpecial" hidden>
@@ -233,11 +234,11 @@
       <li>想自己做聲音？切到 <b>✎ 編輯</b>，點一格就能用畫筆畫</li>
     </ol>
     <p class="wnote touchOnly">📱 沒有聲音的話：請關閉手機的靜音模式，並把音量調大。</p>
-    <div class="wbtns"><button class="hbtn pri" id="wGo">▶ 帶我玩一次（30 秒）</button><button class="hbtn" id="wSkip">我自己逛逛</button></div>
+    <div class="wbtns"><button class="hbtn pri" id="wGo">▶ 30 秒做出第一首曲子</button><button class="hbtn" id="wSkip">我自己逛逛</button></div>
     <a id="wHelp" class="wlink">看完整使用說明</a>
   </div>
 </div>
-<div id="coach" hidden role="status"><span class="coachStep" id="coachStep"></span><span id="coachText"></span><button id="coachX" class="hbtn">略過</button></div>
+<div id="coach" hidden role="status"><span class="coachStep" id="coachStep"></span><div class="coachMain"><div class="coachTop"><b id="coachText"></b><span id="coachTime"></span></div><div id="coachPads"></div></div><div class="coachBtns"><button id="coachAgain" class="hbtn" hidden>再一次</button><button id="coachX" class="hbtn">結束</button></div></div>
 
 <!-- 使用說明 -->
 <button id="helpBtn" title="使用說明（F1）">?</button>
@@ -263,6 +264,7 @@
 
         <section data-ch="start">
           <h2>🚀 30 秒上手</h2>
+          <button class="hbtn pri tourBtn" id="helpTour">▶ 開始 30 秒挑戰：一步一步做出宣傳片裡的音樂</button>
           <p class="lead">InkSynth 是用「畫畫」做音樂的音效板。每一格是一段聲音，對應鍵盤上的一個鍵。先聽聽看範本就知道怎麼玩了。</p>
           <ol class="steps">
             <li><b>選一套範本</b><br>點右上角的「🎼 範本…」，挑一種曲風（Lo-fi、House、和風…）。第一次打開時已經幫你載入一套了。

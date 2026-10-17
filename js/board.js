@@ -13,35 +13,41 @@ function buildBoard(){
     board.appendChild(el);
     const pe = {el, cv:el.querySelector('canvas'), cache:document.createElement('canvas'), dirty:true, was:null};
     padEls.push(pe);
-    el.addEventListener('pointerdown', e => {
-      e.preventDefault(); initAudio();
-      if(S.mode === 'edit'){ openEditor(i); return; }
-      try{ el.setPointerCapture(e.pointerId); }catch(_){}
-      const wasOn = !!padState(i).state;
-      trigger(i, e.shiftKey);
-      padGesture(i, e, wasOn);
-    });
-    el.addEventListener('pointermove', e => padGestureMove(i, e));
-    el.addEventListener('pointerup', () => padGestureEnd(i));
-    el.addEventListener('pointercancel', () => padGestureEnd(i));
+    el.addEventListener('pointerdown', e => padDown(i, e));
+    el.addEventListener('pointermove', e => padMove(i, e));
+    el.addEventListener('pointerup', e => padUp(i, e));
+    el.addEventListener('pointercancel', () => padEnd(i));
     el.addEventListener('contextmenu', e => e.preventDefault());   // 手機長按不要跳出選單
     refreshPad(i);
   });
   lastLayout = null; fitBoard(); sizeThumbs();
 }
-/* 觸控（滑鼠也可以）：按住格子上下拖＝調這一格的音量；按住不動 0.55 秒＝立即停止（只對按下前就在播的格子） */
+/* 點格子（觸控、滑鼠都一樣）：
+   ・放開時才算「點一下」→ 開始／停止（編輯模式＝打開編輯器）
+   ・按住後上下拖 → 只調這一格的音量，不會開始或停止
+   ・按住不動 0.55 秒 → 正在播的格子立即停止 */
 const GEST = {};
-function padGesture(i, e, wasOn){
-  const g = GEST[i] = {y:e.clientY, y0:e.clientY, moved:false};
-  if(wasOn) g.timer = setTimeout(() => { if(!g.moved && padState(i).state){ stopPad(i, 0.03); toast('已立即停止'); } }, 550);
+function padDown(i, e){
+  e.preventDefault(); initAudio();
+  try{ padEls[i].el.setPointerCapture(e.pointerId); }catch(_){}
+  padEls[i].el.classList.add('press');
+  const g = GEST[i] = {y:e.clientY, y0:e.clientY, moved:false, long:false, shift:e.shiftKey};
+  if(S.mode === 'play') g.timer = setTimeout(() => {
+    if(g.moved || !padState(i).state) return;
+    g.long = true; stopPad(i, 0.03); toast('已立即停止'); padEls[i].el.classList.remove('press');
+  }, 550);
 }
-function padGestureMove(i, e){
-  const g = GEST[i]; if(!g || !S.pads[i].objects.length) return;
-  if(!g.moved && Math.abs(e.clientY - g.y0) < 10) return;
-  if(!g.moved){ g.moved = true; clearTimeout(g.timer); padEls[i].el.classList.add('dragVol'); }
+function padMove(i, e){
+  const g = GEST[i]; if(!g || S.mode !== 'play' || !S.pads[i].objects.length) return;
+  if(!g.moved && Math.abs(e.clientY - g.y0) < 8) return;
+  if(!g.moved){ g.moved = true; clearTimeout(g.timer); padEls[i].el.classList.remove('press'); padEls[i].el.classList.add('dragVol'); }
   adjustVol(i, (g.y - e.clientY) / 160); g.y = e.clientY;
 }
-function padGestureEnd(i){ const g = GEST[i]; if(!g) return; clearTimeout(g.timer); padEls[i].el.classList.remove('dragVol'); delete GEST[i]; }
+function padUp(i, e){
+  const g = GEST[i]; padEnd(i); if(!g || g.moved || g.long) return;
+  if(S.mode === 'edit') openEditor(i); else trigger(i, g.shift || e.shiftKey);
+}
+function padEnd(i){ const g = GEST[i]; if(g) clearTimeout(g.timer); padEls[i].el.classList.remove('dragVol', 'press'); delete GEST[i]; }
 function refreshPad(i){
   const p = S.pads[i], pe = padEls[i]; if(!pe) return;
   pe.el.querySelector('.key').textContent = keyLabel(p.key);

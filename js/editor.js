@@ -153,7 +153,7 @@ function syncEditorBar(){
   $('#eKey').classList.toggle('wait', bindingKey);
   $$('#eMode button').forEach(b => b.classList.toggle('on', b.dataset.v === p.mode));
   const playing = voices.has(S.editing);
-  $('#ePlay').textContent = playing ? '■ 停止' : '▶ 試聽整格'; $('#ePlay').classList.toggle('on', playing);
+  $('#ePlay').innerHTML = playing ? '■ 停止' : '▶ 試聽<span class="lt">整格</span>'; $('#ePlay').classList.toggle('on', playing);
   syncSpecial();
 }
 function togglePreview(){
@@ -175,7 +175,7 @@ function syncSpecial(){
   $('#eRoot').value = own ? p.ownKey.root : S.root; $('#eScale').value = own ? p.ownKey.scale : S.scale;
   const special = own || p.align !== 'global';
   $('#eSpecialBtn').classList.toggle('on', special);
-  $('#eSpecialBtn').textContent = special ? '⚙ 特例 ●' : '⚙ 特例';
+  $('#eSpecialBtn').innerHTML = '⚙<span class="lt"> 特例</span>' + (special ? ' ●' : '');
   const q = p.align === 'global' ? `啟動跟隨上方的「${ALIGNS[S.quant]}」` : p.align === 'off' ? '⚡ 按下立刻發聲，不等拍子（適合音效、打擊點綴）' : `這格永遠${ALIGNS[p.align]}啟動`;
   $('#eSpecialNote').textContent = q + '・' + (own ? `♮ 固定在 ${keyName(p)}，切換主調也不會變` : `音高吸附到主調 ${keyName(null)}`);
 }
