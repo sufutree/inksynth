@@ -20,33 +20,34 @@ $('#wGo').onclick = () => { closeWelcome(); initAudio(); boardReady.then(() => s
 
 /* ---------- 關卡 ---------- */
 const LEVELS = {
-  /* 第一關：午夜藍調（92 BPM、搖擺）。一次只按一個鍵。
-     低音從第 2 小節進來，之後跟著和弦走的格子都要隔 4 小節的倍數（和低音同一個和弦循環）才進來 */
+  /* 第一關：午夜藍調（92 BPM、搖擺）。一次只按一個鍵，順便學調音量。
+     低音從第 2 小節進來，之後跟著和弦走的格子都要隔 4 小節的倍數（和低音同一個和弦循環）才進來。
+     vol：調音量的練習，等下一步的時間到了還沒調就自動跳過，音樂不會卡住 */
   1:{name:'第一關：午夜藍調', tpl:'blues', align:{Digit8:'bar'}, steps:[
     {bar:0,  title:'先讓鼓跑起來', go:['Digit1']},
     {bar:2,  title:'加上低音，一步一步往上走的 Walking Bass', go:['KeyZ']},
+    {bar:2,  title:'趁低音跑一輪，試著調它的音量', vol:'KeyZ', dir:0},
     {bar:6,  title:'低音跑完一輪了，風琴伴奏進來', go:['KeyR']},
+    {bar:6,  title:'風琴有點搶戲？把它調小一點', vol:'KeyR', dir:-1},
     {bar:10, title:'主旋律登場（會唱 8 小節）', go:['KeyA']},
     {bar:14, title:'加一點鋼琴切分', go:['KeyW']},
     {bar:18, title:'換副旋律接著唱', go:['KeyS']},
     {bar:21, title:'鼓過門，準備收尾', go:['Digit8']},
     {bar:22, title:'結尾：按下結束和弦（其他聲音會在同一小節停下）', go:['Slash'], end:true},
   ]},
-  /* 第二關：Bossa Nova 海灘（124 BPM）。一次 2–3 個鍵，學會「關掉」：
-     換一組吉他和低音、讓鼓停一下再回來。這個範本的和弦兩兩疊在一起都好聽，循環都是 1 或 2 小節 */
+  /* 第二關：Bossa Nova 海灘（124 BPM）。照 Bossa Nova 示範影片的走向濃縮成約 1 分鐘：
+     吉他開場 → 鼓與低音 → 長笛 → 風琴 → 主旋律加和聲 → 打擊熱鬧起來 → 鼓撤掉、只剩吉他與低音 → 長笛最後一次 → 收尾。
+     一次 1–3 個鍵；這個範本的和弦兩兩疊在一起都好聽，循環都是 1 或 2 小節 */
   2:{name:'第二關：Bossa Nova 海灘', tpl:'bossa', align:{}, steps:[
-    {bar:0,  title:'節奏先來：Bossa 律動加沙鈴', go:['Digit1', 'Digit2']},
-    {bar:2,  title:'吉他和低音一起進來', go:['KeyQ', 'KeyZ']},
-    {bar:6,  title:'長笛主旋律，配上響棒', go:['KeyA', 'Digit3']},
-    {bar:8,  title:'長笛答句，鋪上弦樂', go:['KeyS', 'KeyT']},
-    {bar:10, title:'換一組和弦：先把吉他和低音關掉（再按一次，播完這圈就停）', stop:['KeyQ', 'KeyZ'], go:[]},
-    {bar:10, title:'接著換上另一組吉他和低音', go:['KeyW', 'KeyX']},
-    {bar:12, title:'人聲 Scat 和阿哥哥鈴', go:['KeyD', 'Digit7']},
-    {bar:14, title:'口哨接著唱，弦樂先收起來', stop:['KeyT'], go:['KeyF']},
-    {bar:16, title:'安靜一下：關掉鼓和沙鈴，換成輕輕的鼓刷', stop:['Digit1', 'Digit2'], go:['Digit6']},
-    {bar:20, title:'鼓回來了！弱音小號登場', go:['Digit1', 'KeyK']},
-    {bar:23, title:'過門，準備收尾', go:['Digit8']},
-    {bar:24, title:'結尾：收尾和弦加上結尾鼓（其他聲音會在同一小節停下）', go:['Slash', 'Digit0'], end:true},
+    {bar:0,  title:'兩把吉他開場', go:['KeyQ', 'KeyI']},
+    {bar:4,  title:'鼓和低音進來', go:['Digit1', 'KeyZ']},
+    {bar:8,  title:'海浪聲裡，長笛唱主旋律', go:['KeyA', 'KeyV']},
+    {bar:12, title:'風琴鋪底，長笛回答', go:['KeyU', 'KeyS']},
+    {bar:16, title:'主旋律再一次，這次加上和聲', go:['KeyA', 'Semicolon']},
+    {bar:20, title:'熱鬧起來：沙鈴和 Samba', go:['Digit2', 'Digit9']},
+    {bar:24, title:'把鼓全部關掉（再按一次，播完這圈就停）', stop:['Digit1', 'Digit2', 'Digit9'], go:[]},
+    {bar:28, title:'再安靜一點：關掉風琴和分解吉他，長笛最後唱一次', stop:['KeyU', 'KeyI'], go:['KeyA']},
+    {bar:32, title:'收尾和弦（其他聲音會在同一小節停下）', go:['Slash'], end:true},
   ]},
   /* 第三關：夜店 House（124 BPM）。宣傳片的編排，和 宣傳素材/source/record-house.js 的 PLAN 相同 */
   3:{name:'第三關：夜店 House', tpl:'house', align:{Digit9:'bar', KeyM:'bar', KeyB:'bar'}, steps:[
@@ -60,7 +61,7 @@ const LEVELS = {
   ]},
 };
 const nextLevel = id => Object.keys(LEVELS).map(Number).sort((a, b) => a - b).find(n => n > id);
-const TS = {lv:null, id:0, k:-1, t0:0, seen:null, poll:null, endTimer:null};
+const TS = {lv:null, id:0, k:-1, t0:0, seen:null, poll:null, endTimer:null, vol0:0, volDone:null};
 let TOUR = [];
 const padIdx = key => S.pads.findIndex(p => p.key === key);
 const barLen = () => 240 / S.bpm;
@@ -84,8 +85,8 @@ function startTour(id = 1, firstRun = false){
   toast(`${lv.name}：跟著亮起來的格子按`);
 }
 function endTour(){
-  clearInterval(TS.poll); clearTimeout(TS.endTimer); TS.poll = null; TS.k = -1;
-  $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
+  clearInterval(TS.poll); clearTimeout(TS.endTimer); clearTimeout(TS.volDone); TS.volDone = null; TS.poll = null; TS.k = -1;
+  $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon,.pad.coachVol').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon', 'coachVol'));
   $('#coach').hidden = true; document.body.classList.remove('touring'); fitBoard();
 }
 $('#coachX').onclick = endTour;
@@ -95,6 +96,7 @@ $('#coachNext').onclick = () => { const n = nextLevel(TS.id); if(n) startTour(n,
 function showTourStep(){
   const st = TOUR[TS.k];
   TS.seen = new Set();
+  if(st.vol) TS.vol0 = S.pads[padIdx(st.vol)].vol;
   $('#coachStep').textContent = `${TS.k + 1}／${TOUR.length}`;
   $('#coachText').textContent = st.title;
   $('#coachX').textContent = '結束'; $('#coachAgain').hidden = true; $('#coachNext').hidden = true;
@@ -103,14 +105,19 @@ function showTourStep(){
 }
 const chip = (key, stop, done) => { const i = padIdx(key), p = S.pads[i];
   return `<span class="chip${stop ? ' stop' : ''}${done ? ' done' : ''}">${done ? '✓' : stop ? '■' : ''}<kbd>${esc(keyLabel(key))}</kbd>${esc(p ? p.name : '')}${stop ? ' 停' : ''}</span>`; };
+const volHow = () => isTouch() ? '按住格子上下拖' : '滑鼠移到格子上滾動滾輪，或按住格子上下拖';
 function renderTourPads(){
   const st = TOUR[TS.k];
+  if(st.vol){ const p = S.pads[padIdx(st.vol)], done = TS.seen.has('v');
+    $('#coachPads').innerHTML = `<span class="chip vol${done ? ' done' : ''}">${done ? '✓' : '🔊'}<kbd>${esc(keyLabel(st.vol))}</kbd>${esc(p.name)}・${Math.round(p.vol * 100)}%</span><span class="chipNote">${volHow()}${st.dir < 0 ? '，往下＝變小聲' : '，往上大聲、往下小聲'}</span>`;
+    return; }
   $('#coachPads').innerHTML = [...(st.stop || []).map(k => chip(k, true, TS.seen.has('s' + k))), ...st.go.map(k => chip(k, false, TS.seen.has('g' + k)))].join('');
 }
 /** 每 0.12 秒檢查：要開始的格子有沒有在播、要停的格子有沒有停；也更新倒數 */
 function pollTour(){
   if(TS.k < 0 || !ctx) return;
   const st = TOUR[TS.k];
+  if(st.vol) return pollVol(st);
   let changed = false;
   for(const key of st.go){ const i = padIdx(key), ps = padState(i);
     if(!TS.seen.has('g' + key) && ps.state && !ps.stopping){ TS.seen.add('g' + key); changed = true; } }
@@ -132,9 +139,24 @@ function pollTour(){
     el.classList.toggle('coachSoon', !done && left > 0.05); }
   if(allDone){
     if(st.end) return finishTour();
-    $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon'));
-    TS.k++; showTourStep();
+    nextTourStep();
   }
+}
+/** 調音量的練習：音量變了（dir＜0 要變小）就過關；下一步的時間到了還沒調，就先跳過 */
+function pollVol(st){
+  const i = padIdx(st.vol), v = S.pads[i].vol, d = v - TS.vol0;
+  if(!TS.seen.has('v') && (st.dir < 0 ? d <= -0.1 : Math.abs(d) >= 0.1)){ TS.seen.add('v'); }
+  renderTourPads();
+  const nx = TOUR[TS.k + 1], ready = TS.t0 + ((nx ? nx.bar : st.bar) - 1) * barLen(), left = ready - ctx.currentTime;
+  padEls[i].el.classList.toggle('coachVol', !TS.seen.has('v'));
+  $('#coachTime').innerHTML = TS.seen.has('v') ? '✓ 很好！' : left > 0 ? `下一步還有 <b>${Math.ceil(left / (60 / S.bpm))}</b> 拍` : '';
+  if(TS.seen.has('v')){ if(!TS.volDone) TS.volDone = setTimeout(() => { TS.volDone = null; nextTourStep(); }, 900); }
+  else if(left <= 0){ toast('沒關係，之後隨時都能調音量'); nextTourStep(); }
+}
+function nextTourStep(){
+  if(TS.k < 0) return;
+  $$('.pad.coachPad,.pad.coachStop,.pad.coachSoon,.pad.coachVol').forEach(el => el.classList.remove('coachPad', 'coachStop', 'coachSoon', 'coachVol'));
+  TS.k++; showTourStep();
 }
 /** 結尾：其他還在播的聲音，在結束和弦進來的那一刻一起停 */
 function finishTour(){

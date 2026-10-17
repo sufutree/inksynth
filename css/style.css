@@ -430,3 +430,5 @@ body.mixOpen #coach{bottom:262px}
 }
 body.touring #boardView{padding-bottom:150px}
 @media (max-width:900px){ body.touring #boardHint,body.touring #copyright{display:none} }
+.pad.coachVol{outline:3px solid var(--square);outline-offset:2px;animation:coachPulse .6s infinite alternate;z-index:1}
+.chip.vol{border-color:#ffd23f88;color:#ffe58a}
