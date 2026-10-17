@@ -1,34 +1,64 @@
-InkSynth Pads
-Copyright (c) 2026 sufutree. All rights reserved.
+InkSynth Pads 授權與使用規範
+Copyright (c) 2026 sufutree
 
-本軟體（InkSynth Pads，包含原始碼、介面與視覺設計、音色與和聲設計、範本內容、
-產生範本的工具與相關文件）之著作權屬於 sufutree 所有，保留所有權利。
+本文件分成兩部分：「你用 InkSynth 做出來的作品」與「InkSynth 平台本身」。
 
-未經著作權人事先書面同意，任何人不得：
-1. 複製、修改、改作、散布、公開傳輸本軟體的全部或一部分；
-2. 將本軟體或其衍生作品用於商業用途，或轉售、出租、再授權；
-3. 以反向工程或其他方式擷取本軟體的程式碼、範本資料或設計，用於開發其他產品或服務。
+====================================================================
+一、你創作的作品：歸你所有，可以商用
+====================================================================
 
-使用者可以透過官方網站（https://inksynth-pad.vercel.app/）在瀏覽器中使用本軟體。
-使用者以本軟體創作的音樂、匯出的音效板檔案與錄製的影片，其權利歸使用者所有。
+你用 InkSynth Pads（https://inksynth-pad.vercel.app/）創作的音樂、錄音、
+影片，以及你存下的音效板檔案（.json），權利都屬於你。
 
-本軟體依「現況」提供，不提供任何明示或默示之擔保；著作權人不對因使用本軟體所生之
-任何損害負責。
+1. 可以自由用於個人或商業用途，例如：發行歌曲、上架串流平台、影片與遊戲配樂、
+   直播、廣告、接案製作，不需要付費，也不需要另外取得同意。
+2. 使用內建範本做出來的作品也一樣可以商用。範本是給你創作用的素材。
+3. 標註「Made with InkSynth」我們很歡迎，但不是必要條件。
 
-本軟體所使用的第三方元件，依其各自附帶的授權條款使用。
+唯一的例外：不可以把內建範本、音色設定本身「原封不動或稍作修改」後，
+單獨打包成素材包、音色庫、範本集來販售或散布。
+（拿範本做成你的曲子沒問題；把範本當成商品轉賣不行。）
 
----
+====================================================================
+二、InkSynth 平台本身：保留所有權利
+====================================================================
 
+平台的原始碼、介面與視覺設計、「用畫筆作曲」的互動設計、音色與和聲設計、
+範本內容、教學關卡、產生範本的工具與相關文件，著作權屬於 sufutree。
+
+未經事先書面同意，不得：
+1. 複製、修改、散布或公開傳輸平台的原始碼或範本資料；
+2. 抄襲平台的創意，例如照搬介面、互動方式、範本編排或教學關卡，
+   做成相似的產品或服務；
+3. 惡意破壞平台，例如攻擊或干擾網站運作、大量自動化存取、植入惡意程式、
+   以本平台名義散布修改版或冒充官方。
+
+====================================================================
+三、其他
+====================================================================
+
+本平台依「現況」提供，不提供任何明示或默示的擔保；著作權人不對因使用本平台
+所生的任何損害負責。本平台使用的第三方元件，依其各自的授權條款使用。
+
+如需本文件以外的授權（例如合作、轉載平台內容），請聯絡 sufutree。
+
+--------------------------------------------------------------------
 English summary
 
-All rights reserved. No part of this software (source code, interface and visual
-design, sound and harmony design, templates, tools and documentation) may be
-copied, modified, distributed, publicly transmitted, used commercially, resold,
-sublicensed, or reverse engineered for use in other products without prior
-written permission from the copyright holder.
+Your creations are yours. Music, recordings, videos and board files you make
+with InkSynth Pads — including works built from the built-in templates — may
+be used for any personal or commercial purpose, free of charge and without
+permission. You may not, however, repackage and sell or distribute the built-in
+templates or sound presets themselves as sample packs, presets or template
+collections.
 
-Users may use the software through the official website in their browser. Music,
-exported boards and videos created by users with the software belong to the users.
+The platform itself (source code, interface and visual design, the draw-to-
+compose interaction design, sound and harmony design, templates, tutorial levels,
+tools and documentation) is © 2026 sufutree, all rights reserved. Without prior
+written permission you may not copy, modify or distribute it, imitate its
+creative design in a similar product or service, or maliciously harm the
+platform (attacks, disruption, mass automated access, malware, or distributing
+modified versions under its name).
 
-The software is provided "as is", without warranty of any kind. Third-party
+The platform is provided "as is", without warranty of any kind. Third-party
 components are used under their own licenses.

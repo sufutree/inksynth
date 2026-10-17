@@ -52,3 +52,5 @@ $('#helpTipX').onclick = e => { e.stopPropagation(); dismissHelpTip(); };
 $('#helpTip').onclick = () => openHelp('start');
 let helpTipTimer = null;
 try{ if(!localStorage.getItem(HELP_SEEN)) helpTipTimer = setTimeout(() => $('#helpTip').hidden = false, 1500); }catch(_){}
+
+$('#licLink').onclick = () => openHelp('license');

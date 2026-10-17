@@ -5,3 +5,11 @@ Thumbs.db
 # 錄下來的影片不要上傳
 *.mp4
 *.webm
+
+# 只放在本機、不公開的東西（線上只公開網頁本身與 15 套範本）
+python版本/
+宣傳素材/
+音效板/
+/*.inksynth.json
+.vscode/
+tools/build-excursions.js
