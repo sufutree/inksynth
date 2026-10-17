@@ -277,7 +277,7 @@
               <button class="show" data-show="#tpl">👀 指給我看</button></li>
             <li><b>按鍵盤播放</b><br>每一格左上角標著按鍵，例如 <kbd>Q</kbd>、<kbd>A</kbd>、<kbd>1</kbd>。按下去就會播放，用滑鼠點格子也可以。
               <button class="show" data-show="#board" data-need="board">👀 指給我看</button></li>
-            <li><b>疊在一起、再停下來</b><br>多按幾格，聲音就會疊成一首曲子。同一格再按一次，會播完這一圈才停；按 <kbd>Esc</kbd> 或「■ 全部停止」會全部立刻停。
+            <li><b>疊在一起、再停下來</b><br>多按幾格，聲音就會疊成一首曲子。同一格再按一次，會播完這一圈才停；想漂亮收尾，按 <kbd>/</kbd> 的結束和弦，它進來時其他聲音會一起收掉；按 <kbd>Esc</kbd> 或「■ 全部停止」會全部立刻停。
               <button class="show" data-show="#stopAll">👀 指給我看</button></li>
           </ol>
           <p class="tip">💡 範本裡所有格子都對齊同一條小節線，和聲也事先調過，隨便疊都不會打架，放心亂按。</p>
@@ -289,13 +289,14 @@
           <p class="lead">上方切到「▶ 演奏」時，音效板就是你的樂器。</p>
           <h3>40 格的排列</h3>
           <p>40 格照電腦鍵盤的位置排成 4 列：<kbd>1</kbd>–<kbd>0</kbd>、<kbd>Q</kbd>–<kbd>P</kbd>、<kbd>A</kbd>–<kbd>;</kbd>、<kbd>Z</kbd>–<kbd>/</kbd>。虛線框的格子是空的。</p>
-          <h3>單次與循環</h3>
+          <h3>單次、循環與結尾</h3>
           <table class="ht">
             <tr><th>格子右上角</th><th>意思</th><th>怎麼停</th></tr>
             <tr><td><b>→</b> 單次</td><td>按一下播一次</td><td>播完自己停</td></tr>
             <tr><td><b>↻</b> 循環</td><td>一直重複播放</td><td>再按一次 → 播完這圈停（格子會變虛線閃爍）</td></tr>
             <tr><td><b>⇥</b> 結尾</td><td>播一次，並在它進來的那一刻，把比它早開始的聲音全部收掉（同時按下、同時進來的格子會保留）</td><td>播完自己停</td></tr>
           </table>
+          <p class="tip">💡 每個範本的 <kbd>/</kbd>（結束和弦）都是「⇥ 結尾」模式。和它在同一個小節內一起按的格子（例如結尾鼓）會跟它一起留下來。想讓自己畫的格子也有這個效果，在編輯器上方把模式改成「⇥ 結尾」。</p>
           <ul>
             <li><kbd>Shift</kbd>＋格子的鍵：<b>立刻</b>停止那一格。手機、平板上：<b>按住格子不放</b>約半秒。</li>
             <li><kbd>Esc</kbd> 或「■ 全部停止」：全部立刻停止。</li>

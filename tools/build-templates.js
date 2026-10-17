@@ -321,8 +321,9 @@ function build(C){
     /** 持續音：主音（不安全就改五度），再加五度或八度；只用安全音，疊在每個和弦上都不衝突 */
     drone:(o, tm, name) => { const ok = m => safePc(m % 12), a = ok(tonic) ? tonic : ok(tonic + 7) ? tonic - 5 : tonic, b = ok(a + 7) ? a + 7 : a + 12;
       return [{name, mode:'loop', beats:16, vol:0.48}, [note(16, 0, 16, a - 12, syn(tm), 0.8), note(16, 0, 16, b - 12, syn(tm, {alpha:0.35, pan:0.3}), 0.7)]]; },
+    /** 結束和弦：「⇥ 結尾」模式，進來的那一刻把其他聲音收掉 */
     outro:(o, tm, name) => { const v = lead([FINAL], {n:5, lo:50, hi:79, top:76, spread:24})[0];
-      return [{name, mode:'oneshot', beats:8, vol:0.62, ...HK}, [voiced(8, 0, 7.5, v, syn(tm), 0.9), note(8, 0, 7, inWin(FINAL.bass, 40, 51), syn(tm, {alpha:0.5}), 0.8)]]; },
+      return [{name, mode:'end', beats:8, vol:0.62, ...HK}, [voiced(8, 0, 7.5, v, syn(tm), 0.9), note(8, 0, 7, inWin(FINAL.bass, 40, 51), syn(tm, {alpha:0.5}), 0.8)]]; },
 
     /* ---- 曲風專用 ---- */
     /** 手寫的音：o.notes = [[拍, 長度, 級數, 力度]] */

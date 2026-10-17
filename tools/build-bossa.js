@@ -193,8 +193,8 @@ set('KeyB', {name:'鳥鳴', mode:'oneshot', beats:4, vol:0.45}, [
   curve(4, 0, 0.3, u => midiToY(deg(8) + u * 5), {...BIRD, pan:0.5}), curve(4, 0.4, 0.7, u => midiToY(deg(8) + u * 5), {...BIRD, pan:0.5}),
   curve(4, 2, 2.2, u => midiToY(deg(11) - u * 5), {...BIRD, pan:-0.4}), curve(4, 2.3, 2.5, u => midiToY(deg(11) - u * 5), {...BIRD, pan:-0.4}),
   curve(4, 2.6, 3.1, u => midiToY(deg(8) + Math.sin(u * Math.PI) * 4), {...BIRD, pan:-0.4})]);
-set('KeyN', {name:'黑膠沙沙聲', mode:'loop', beats:4, vol:0.55},
-  [curve(4, 0, 4, () => midiToY(deg(11)), syn('wind', 'soft', {size:3, alpha:0.4, texture:'grain', rev:0.05, a:0.3, r:0.3}), u => 0.6 + 0.1 * Math.sin(u * Math.PI * 8))]);
+set('KeyN', {name:'黑膠沙沙聲', mode:'loop', beats:4, vol:0.9},   // 顆粒效果改溫和後，音量補回來
+  [curve(4, 0, 4, () => midiToY(deg(11)), syn('wind', 'soft', {size:3, alpha:0.85, texture:'grain', rev:0.05, a:0.3, r:0.3}), u => 0.6 + 0.1 * Math.sin(u * Math.PI * 8))]);
 const HARP = syn('pluck', 'pluck', {size:16, alpha:0.55, d:0.6, s:0.08, r:0.9, rev:0.45, dly:0.12});
 set('KeyM', {name:'豎琴刷奏', mode:'oneshot', beats:2, vol:0.6},
   notes(2, Array.from({length:12}, (_, j) => [j * 0.11, 0.6, pen(8 - j), 0.95 - j * 0.04]), HARP).map((o, j) => ({...o, pan:0.5 - j / 11})));
@@ -209,7 +209,7 @@ set('Period', {name:'庫伊卡 Cuíca', mode:'loop', beats:4, vol:0.45}, [
   curve(4, 2.5, 2.8, u => midiToY(pen(3) + Math.sin(u * Math.PI) * 5), CUICA, u => 0.8 - u * 0.3),
   curve(4, 3, 3.45, u => midiToY(pen(2) + Math.sin(u * Math.PI) * 7), CUICA, u => 1 - u * 0.4)]);
 const FIN = syn('bell', 'pluck', {size:12, alpha:0.6, d:2, s:0.3, r:3, rev:0.55});
-set('Slash', {name:'收尾 Fmaj9', mode:'oneshot', beats:8, vol:0.7}, [
+set('Slash', {name:'收尾 Fmaj9', mode:'end', beats:8, vol:0.7}, [
   chord(8, 0, 7, F3, 'sq', FIN),
   chord(8, 0.05, 7.5, F4, 'tri', syn('choir', 'swell', {size:14, alpha:0.45, rev:0.6, a:0.8, r:2.5, texture:'mist'})),
   note(8, 0.1, 6, deg(8), {...FIN, size:20, alpha:0.55, dly:0.3}, 0.8)]);
