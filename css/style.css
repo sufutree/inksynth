@@ -23,6 +23,10 @@ header{display:flex;align-items:center;gap:8px 10px;padding:9px 16px;min-height:
 #modes button.on[data-mode=edit]{color:var(--square)}
 body.ov #modes{opacity:.45}
 .glob{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.globMore{display:contents}
+#moreBtn{display:none}
+.glob > #stopAll{order:1}
+.glob #tpl,.glob .menuWrap{order:2}
 .tplSel{border-color:#7cf0d055 !important;color:var(--accent) !important;max-width:170px}
 .glob label{display:flex;align-items:center;gap:5px}
 .glob input[type=number]{width:62px}
@@ -52,8 +56,10 @@ main{flex:1;min-height:0;position:relative}
 .pad.armed{border-color:var(--c);animation:arm .3s infinite alternate}
 @keyframes arm{to{border-color:transparent}}
 .pad.hit{transform:scale(.95)}
-body.edit .pad:hover::after{content:"✎";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  background:rgba(12,13,18,.55);color:var(--square);font-weight:700;font-size:22px}
+@media (hover:hover){
+  body.edit .pad:hover::after{content:"✎";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(12,13,18,.55);color:var(--square);font-weight:700;font-size:22px}
+}
 #boardHint{margin-top:16px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.8}
 #boardHint b{color:var(--text)}
 
@@ -140,21 +146,6 @@ aside h3{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:60
 #toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#232634;border:1px solid var(--line);z-index:9;
   padding:8px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
 
-@media (max-width:900px){
-  header{height:auto;padding:10px 12px}
-  .glob{margin-left:0;flex-wrap:wrap}
-  main{flex:none;min-height:70vh}
-  #board{width:100%;row-gap:6px}
-  .pad{margin:0 2px;border-radius:8px}
-  .pad .name,.pad .mode{display:none}
-  #ovView{flex-direction:column}
-  .ovStage{height:60vh;flex:none}
-  .ovSide{width:auto;border-left:0}
-  #editor{position:fixed;inset:0;z-index:5;overflow:auto}
-  .ebody{flex-direction:column}
-  #eside{width:auto;border-right:0;border-bottom:1px solid var(--line)}
-  .stage{height:62vh;flex:none;margin:8px}
-}
 
 /* ---------- 音效板名稱、檔案選單 ---------- */
 .boardName{border:1px dashed transparent;background:none;color:var(--muted);font-size:13px;padding:4px 8px;border-radius:7px;cursor:pointer;
@@ -280,3 +271,120 @@ body.mixOpen #helpTip{bottom:266px}
 }
 .mxEnh{display:flex;align-items:center;gap:5px;color:var(--text);cursor:pointer;padding:3px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
 .mxEnh input{accent-color:var(--accent)}
+
+/* ============================================================
+   觸控、平板、手機
+   ============================================================ */
+html{-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-text-size-adjust:100%}
+.pad{-webkit-touch-callout:none}
+header{padding-top:max(9px, env(safe-area-inset-top));padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right))}
+#mixer{padding-bottom:max(12px, env(safe-area-inset-bottom))}
+#helpBtn{bottom:max(16px, calc(env(safe-area-inset-bottom) + 8px))}
+
+/* 音效板的三種排法：stagger＝像鍵盤錯開（桌機）、ten＝10×4 整齊格（平板、觸控）、five＝5 欄（手機直向） */
+#board[data-layout=ten]{grid-template-columns:repeat(10,1fr);column-gap:8px;row-gap:8px}
+#board[data-layout=five]{grid-template-columns:repeat(5,1fr);gap:6px}
+#board:not([data-layout=stagger]) .pad{margin:0}
+#board[data-layout=five] .pad.grpTop{margin-top:8px}
+#board[data-layout=five] .pad{border-radius:9px}
+#board[data-layout=five] .pad .key{left:4px;top:4px;min-width:18px;height:18px;font-size:10.5px;padding:0 4px}
+#board[data-layout=five] .pad .mode{right:4px;top:4px;font-size:10px;padding:0 4px}
+#board[data-layout=five] .pad .name{font-size:10px;padding:8px 4px 3px}
+#board[data-layout=ten] .pad .name{font-size:10.5px}
+/* 觸控：按住上下拖曳調音量時的提示 */
+.pad.dragVol{box-shadow:0 0 0 2px var(--c) !important}
+
+/* 收合的標頭：設定收進「⚙ 設定」面板 */
+@media (max-width:1180px){
+  #moreBtn{display:inline-block}
+  #moreBtn.on{border-color:var(--accent);color:var(--accent)}
+  .globMore{display:none;position:absolute;right:max(12px, env(safe-area-inset-right));top:calc(100% + 6px);z-index:25;width:min(340px, calc(100vw - 24px));
+    max-height:calc(100dvh - 90px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;
+    box-shadow:0 14px 34px rgba(0,0,0,.55);flex-direction:column;gap:10px;align-items:stretch;font-size:14px;color:var(--text)}
+  .globMore.open{display:flex}
+  .globMore label{justify-content:space-between}
+  .globMore select,.globMore input[type=number]{min-width:150px;font-size:15px}
+  .globMore .tplSel{max-width:none;width:100%;font-size:15px;padding:9px 8px}
+  .globMore .hbtn,.globMore #fileBtn{width:100%;padding:10px 12px;font-size:14px}
+  .globMore .menu{position:static;box-shadow:none;margin-top:6px;min-width:0}
+}
+@media (max-width:600px){
+  header{gap:6px;padding-left:max(10px, env(safe-area-inset-left));padding-right:max(10px, env(safe-area-inset-right));min-height:0}
+  .logo{font-size:18px}
+  .boardName{max-width:120px;font-size:12px}
+  .lt{display:none}
+  .tabs button{padding:7px 10px;font-size:13px}
+  .glob{margin-left:auto}
+  .glob .hbtn{padding:7px 10px}
+}
+
+@media (max-width:900px){
+  #boardView{justify-content:flex-start;padding:12px 10px 70px}
+  #board{row-gap:6px}
+  #boardHint{font-size:12px;margin-top:12px}
+  #ovView{flex-direction:column;overflow-y:auto}
+  .ovStage{height:55vh;flex:none;margin:8px}
+  .ovSide{width:auto;border-left:0;overflow:visible}
+  .mxNote{display:none}
+  .mbar select{min-width:0;width:100%}
+  /* 編輯器：全螢幕，畫布在上、面板在下 */
+  #editor{position:fixed;inset:0;z-index:10}
+  .ebar{flex-wrap:nowrap;overflow-x:auto;padding:8px 10px;padding-top:max(8px, env(safe-area-inset-top));scrollbar-width:none}
+  .ebar::-webkit-scrollbar{display:none}
+  .ebar > *{flex:none}
+  .ebar #eName{width:110px}
+  .ebody{flex-direction:column;overflow-y:auto}
+  .stage{order:-1;flex:none;height:62vh;height:min(62dvh, 620px);margin:8px}
+  #eside{width:auto;flex:none;overflow:visible;border-right:0;border-top:1px solid var(--line);padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  .seg button{padding:8px 3px}
+  .tones button{padding:8px 2px 7px}
+}
+/* 手機橫向：高度很矮，面板放旁邊 */
+@media (max-width:950px) and (orientation:landscape) and (max-height:520px){
+  #editor{position:fixed;inset:0;z-index:10}
+  .ebody{flex-direction:row;overflow:hidden}
+  .stage{order:0;flex:1;height:auto;margin:6px}
+  #eside{width:250px;flex:none;overflow-y:auto;border-top:0;border-right:1px solid var(--line);padding-bottom:20px}
+  .ebar{flex-wrap:nowrap;overflow-x:auto;padding:6px 10px}
+  .ebar > *{flex:none}
+  #boardView{padding-top:8px}
+}
+/* 觸控裝置：鍵盤快捷鍵說明用不到 */
+@media (pointer:coarse){
+  .kbdNote{display:none}
+  #helpBtn{width:36px;height:36px;font-size:17px}
+}
+
+/* ---------- 新手：歡迎視窗與導覽 ---------- */
+.wbox{width:min(460px,100%);padding:26px 24px 20px;text-align:center;overflow-y:auto}
+.wlogo{font-weight:800;font-size:24px;letter-spacing:.3px}
+.wlogo b{color:var(--accent);font-weight:800}
+.wbox h2{font-size:19px;margin:6px 0 10px}
+.wlead{color:#c9c6bd;font-size:14.5px;line-height:1.7;margin:0 0 14px}
+.wsteps{text-align:left;list-style:none;counter-reset:ws;padding:0;margin:0 0 14px;font-size:14px;line-height:1.6}
+.wsteps li{counter-increment:ws;position:relative;padding:8px 10px 8px 42px;margin:6px 0;background:var(--panel2);border:1px solid var(--line);border-radius:11px}
+.wsteps li::before{content:counter(ws);position:absolute;left:11px;top:9px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#06221b;
+  font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+.wnote{font-size:13px;color:var(--square);margin:0 0 12px}
+.wbtns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.wbtns .hbtn{padding:11px 14px;font-size:15px}
+.hbtn.pri{background:var(--accent);color:#06221b;border-color:transparent;font-weight:700}
+.wlink{display:inline-block;margin-top:12px;font-size:13px}
+body:not(.touch) .touchOnly{display:none}
+body.touch .kbOnly{display:none}
+#coach{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px, calc(env(safe-area-inset-bottom) + 10px));z-index:9;
+  display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100vw - 80px);padding:10px 10px 10px 14px;
+  background:#1d2130;border:1px solid #7cf0d066;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-size:14px;line-height:1.5;animation:tipIn .3s}
+#coach .coachStep{flex:none;color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums}
+#coach .hbtn{flex:none;padding:6px 12px}
+body.mixOpen #coach{bottom:262px}
+.pad.coachPad{outline:3px solid var(--accent);outline-offset:2px;animation:coachPulse .9s infinite alternate;z-index:1}
+@keyframes coachPulse{to{outline-color:transparent}}
+@media (max-width:600px){ #coach{font-size:13px;left:10px;right:56px;transform:none;width:auto;max-width:none} }
+/* 矮螢幕（手機橫向）：把說明文字、版權收起來，讓格子大一點 */
+@media (max-height:520px){
+  #boardHint,#copyright{display:none}
+  #boardView{padding-top:8px;padding-bottom:8px}
+  header{min-height:0;padding-top:max(6px, env(safe-area-inset-top));padding-bottom:6px}
+  .pad .mode{display:none}
+}

@@ -35,6 +35,15 @@ $('#bpm').onchange = e => { S.bpm = clamp(Math.round(+e.target.value) || 100, 50
 $('#quant').onchange = e => { S.quant = e.target.value; if(S.editing !== null) syncSpecial(); save(); };
 $('#stopAll').onclick = () => { stopAll(); syncEditorBar(); };
 document.addEventListener('click', e => { const b = e.target.closest('button'); if(b) b.blur(); });
+/* 窄螢幕：調性、速度、範本、檔案收進「⚙ 設定」面板 */
+function toggleMore(show = !$('#globMore').classList.contains('open')){
+  $('#globMore').classList.toggle('open', show); $('#moreBtn').classList.toggle('on', show); $('#moreBtn').setAttribute('aria-expanded', show);
+}
+$('#moreBtn').onclick = () => toggleMore();
+document.addEventListener('pointerdown', e => { if($('#globMore').classList.contains('open') && !e.target.closest('#globMore,#moreBtn')) toggleMore(false); });
+$('#tpl').addEventListener('change', () => toggleMore(false));
+$('#mixBtn').addEventListener('click', () => toggleMore(false));
+$('#fileMenu').addEventListener('click', e => { if(e.target.closest('button')) toggleMore(false); });
 
 /* ---------- 鍵盤 ---------- */
 const held = new Set();
@@ -55,7 +64,8 @@ addEventListener('keydown', e => {
   if(tag === 'SELECT' && undoKey && S.editing !== null) e.target.blur();
   else if(tag === 'SELECT' || (tag === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')){ if(e.code === 'Escape') e.target.blur(); return; }
   if(e.code === 'Escape'){
-    if(!$('#impModal').hidden) closeImport();
+    if($('#globMore').classList.contains('open')) toggleMore(false);
+    else if(!$('#impModal').hidden) closeImport();
     else if(S.editing !== null && S.sel) select(null);   // 取消所有選取
     else if(S.editing !== null) closeEditor();
     else stopAll();
@@ -119,7 +129,7 @@ const hadSave = load();
 if(!hadSave) S.pads = PAD_KEYS.map((_, i) => newPad(i));
 syncGlobals(); syncBoardName(); buildBoard(); setMode('play'); setView('board'); syncTools(); syncOvOptions();
 (function frame(){ requestAnimationFrame(frame); drawBoard(); drawEditor(); ovFrame(); })();
-loadTemplateFiles().then(() => {
+const boardReady = loadTemplateFiles().then(() => {
   fillTemplateSelect();
   const first = templateList()[0];
   if(!hadSave && first){ applyBoard(first); toast(`第一次使用，先幫你載入範本「${first.name}」`); }
