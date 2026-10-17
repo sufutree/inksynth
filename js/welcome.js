@@ -99,7 +99,8 @@ function showTourStep(){
   if(st.vol) TS.vol0 = S.pads[padIdx(st.vol)].vol;
   $('#coachStep').textContent = `${TS.k + 1}／${TOUR.length}`;
   $('#coachText').textContent = st.title;
-  $('#coachX').textContent = '結束'; $('#coachAgain').hidden = true; $('#coachNext').hidden = true;
+  $('#coachX').textContent = '結束'; $('#coachAgain').hidden = false; $('#coachAgain').textContent = '↺ 重來'; $('#coachAgain').classList.remove('nudge'); $('#coachNext').hidden = true;
+  $('#coachOops').hidden = true;
   $('#coach').hidden = false; document.body.classList.add('touring'); fitBoard();
   renderTourPads(); pollTour();
 }
@@ -171,9 +172,19 @@ function finishTour(){
   $('#coachPads').innerHTML = `<span class="chipNote">換個範本、換個順序按按看；想自己做聲音，切到「✎ 編輯」點一格。</span>`;
   $('#coachTime').innerHTML = '';
   const n = nextLevel(TS.id);
-  $('#coachX').textContent = '好'; $('#coachAgain').hidden = false;
+  $('#coachX').textContent = '好'; $('#coachAgain').hidden = false; $('#coachAgain').textContent = '再一次'; $('#coachAgain').classList.remove('nudge'); $('#coachOops').hidden = true;
   $('#coachNext').hidden = !n; if(n) $('#coachNext').textContent = LEVELS[n].name.split('：')[0] + ' ▶';
 }
+/* 按錯了：按到這一步以外的格子，提示可以重來（不強迫，繼續玩也行） */
+function tourOops(i, shift){
+  if(TS.k < 0 || !TOUR[TS.k]) return;
+  const st = TOUR[TS.k], keys = [...st.go || [], ...st.stop || [], ...(st.vol ? [st.vol] : [])], p = S.pads[i];
+  if(!p || keys.includes(p.key)) return;
+  $('#coachOops').innerHTML = `按到「<kbd>${esc(keyLabel(p.key))}</kbd> ${esc(p.name || '')}」了？按「↺ 重來」可以從頭開始，繼續玩也可以。`;
+  $('#coachOops').hidden = false;
+  const b = $('#coachAgain'); b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge');
+}
+{ const _trigger = trigger; trigger = function(i, shift){ _trigger(i, shift); tourOops(i, shift); }; }
 /* 切去編輯模式就結束挑戰 */
 { const _setMode = setMode; setMode = function(m){ _setMode(m); if(m !== 'play' && TS.k >= 0) endTour(); }; }
 

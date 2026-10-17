@@ -432,3 +432,7 @@ body.touring #boardView{padding-bottom:150px}
 @media (max-width:900px){ body.touring #boardHint,body.touring #copyright{display:none} }
 .pad.coachVol{outline:3px solid var(--square);outline-offset:2px;animation:coachPulse .6s infinite alternate;z-index:1}
 .chip.vol{border-color:#ffd23f88;color:#ffe58a}
+#coachOops{margin-top:6px;font-size:12.5px;color:#ffb3bb}
+#coachOops kbd{font-size:11px}
+#coachAgain.nudge{border-color:#ff6b7a;color:#ffb3bb;animation:nudge .35s 4 alternate}
+@keyframes nudge{to{transform:scale(1.08)}}
